@@ -199,22 +199,32 @@ export default function Home() {
                 <Menu size={20} />
             </button>
 
-            {/* ChatGPT-Style Version Switcher */}
-            <div className="flex items-center gap-1 p-1 bg-white/5 rounded-2xl border border-white/5">
-                {(["v5.1", "v5.2", "v5.3"] as AuraVersion[]).map(v => (
-                    <button 
-                        key={v} 
-                        onClick={() => setVersion(v)}
-                        className={`px-4 py-1.5 rounded-xl text-[10px] font-black transition-all ${version === v ? 'bg-white/10 text-white shadow-xl' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                        {v}
-                    </button>
-                ))}
+            {/* Grok-Style Version Switcher */}
+            <div className="flex items-center gap-6">
+                <div className="flex items-center gap-1 p-1 bg-white/5 rounded-2xl border border-white/5">
+                    {(["v5.1", "v5.2", "v5.3"] as AuraVersion[]).map(v => (
+                        <button 
+                            key={v} 
+                            onClick={() => setVersion(v)}
+                            className={`px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${version === v ? 'bg-white/10 text-white shadow-xl' : 'text-slate-500 hover:text-slate-300'}`}
+                        >
+                            {v}
+                        </button>
+                    ))}
+                </div>
+                <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/5 border border-cyan-500/20">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f2ff] animate-pulse"></div>
+                    <span className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em]">Flux Active</span>
+                </div>
             </div>
 
             <div className="flex items-center gap-4">
-                 <button onClick={syncNeuralMemory} className={`p-2 text-slate-500 hover:text-white transition-all ${isSyncing ? 'animate-spin text-blue-500' : ''}`}>
-                    <Wifi size={18}/>
+                 <button 
+                  onClick={syncNeuralMemory} 
+                  className={`p-2 text-slate-500 hover:text-cyan-400 transition-all ${isSyncing ? 'animate-spin text-cyan-400' : ''}`}
+                  title="Grok Flux Sync"
+                 >
+                    <Wifi size={20}/>
                  </button>
             </div>
         </header>
@@ -222,26 +232,40 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-12 relative pb-40">
             <div className="max-w-3xl mx-auto w-full">
                 {status.status === 'idle' ? (
-                    <div className="h-[60vh] flex flex-col items-center justify-center text-center space-y-6">
-                        <img src="/aura-monolith.png" className="w-16 h-16 rounded-2xl border border-white/10 shadow-2xl opacity-20" />
-                        <h2 className="text-4xl font-black text-white italic tracking-tighter max-w-lg">How can AuraCore {version} help you?</h2>
+                    <div className="h-[60vh] flex flex-col items-center justify-center text-center space-y-8">
+                        <img src="/aura-monolith.png" className="w-16 h-16 rounded-2xl border border-white/10 shadow-2xl opacity-40 pulse-glow" />
+                        <h2 className="text-5xl font-black text-white italic tracking-tighter max-w-xl leading-tight">Grok the Neural Matrix {version}</h2>
+                        <div className="flex gap-4">
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Real-Time</span>
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">//</span>
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Unfiltered</span>
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">//</span>
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Zero-Limits</span>
+                        </div>
                     </div>
                 ) : (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10"><img src="/aura-monolith.png" className="w-full h-full object-cover" /></div>
-                                <span className="text-[11px] font-black text-white tracking-widest uppercase">Intelligence Flow <span className="text-blue-500">[{version}]</span></span>
-                            </div>
-                            <div className="intel-report leading-relaxed">
-                                {status.result || <div className="flex items-center gap-2 text-blue-500 animate-pulse font-mono text-xs italic"><Loader2 size={14} className="animate-spin" /> Synthesizing Data...</div>}
-                            </div>
-                            {status.result && (
-                                <div className="flex gap-2">
-                                    <button onClick={() => navigator.clipboard.writeText(status.result || "")} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-500 transition-all"><Copy size={16}/></button>
-                                    <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-500 transition-all"><Download size={16}/></button>
+                        <div className="space-y-6 relative group">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10"><img src="/aura-monolith.png" className="w-full h-full object-cover" /></div>
+                                    <span className="text-[11px] font-black text-white tracking-widest uppercase">Intelligence Flow <span className="text-cyan-400">[{version}]</span></span>
                                 </div>
-                            )}
+                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => navigator.clipboard.writeText(status.result || "")} className="p-2 rounded-lg bg-white/5 hover:bg-cyan-500/10 text-slate-500 hover:text-cyan-400 transition-all border border-white/5" title="Copy Intelligence"><Copy size={14}/></button>
+                                    <button onClick={() => {
+                                        const blob = new Blob([status.result || ""], { type: 'text/markdown' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `AuraCore_Report.md`;
+                                        a.click();
+                                    }} className="p-2 rounded-lg bg-white/5 hover:bg-cyan-500/10 text-slate-500 hover:text-cyan-400 transition-all border border-white/5" title="Download Report"><Download size={14}/></button>
+                                </div>
+                            </div>
+                            <div className="intel-report leading-relaxed bg-white/[0.02] p-8 rounded-[32px] border border-white/[0.03] shadow-2xl">
+                                {status.result || <div className="flex items-center gap-2 text-cyan-500 animate-pulse font-mono text-xs italic"><Loader2 size={14} className="animate-spin" /> Synthesizing Data...</div>}
+                            </div>
                         </div>
                     </motion.div>
                 )}

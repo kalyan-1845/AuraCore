@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020206;
+  --background: #000000;
   --foreground: #ffffff;
+  --accent: #00f2ff;
 }
 
 body {
@@ -10,25 +11,23 @@ body {
   color: var(--foreground);
   font-family: 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
+  letter-spacing: -0.01em;
 }
 
-/* High-Fidelity Quantum Fog Background */
+/* Grok-Flux Background */
 .mesh-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: linear-gradient(rgba(2, 2, 6, 0.7), rgba(2, 2, 6, 0.7)), url('/bg-quantum.png');
+  background-image: radial-gradient(circle at top right, #001f3f 0%, #000000 100%);
   background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  filter: brightness(0.8);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.5);
+  background: rgba(10, 10, 15, 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -44,9 +43,21 @@ body {
 
 /* Intelligence Report Styling - Zero Apply */
 .intel-report {
-  color: #cbd5e1;
-  line-height: 1.8;
+  color: #f8fafc;
+  font-size: 1.05rem;
+  line-height: 1.7;
 }
+
+.pulse-glow {
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+    animation: flux-pulse 4s infinite ease-in-out;
+}
+
+@keyframes flux-pulse {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 242, 255, 0.4); }
+}
+
 .intel-report h1 { font-size: 2rem; font-weight: 800; color: white; margin-bottom: 1.5rem; }
 .intel-report h2 { font-size: 1.5rem; font-weight: 700; color: #60a5fa; margin-top: 2rem; margin-bottom: 1rem; }
 .intel-report p { margin-bottom: 1.5rem; }
