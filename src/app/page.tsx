@@ -25,6 +25,7 @@ export default function Home() {
   const [historySearch, setHistorySearch] = useState("");
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
   const [isTraceOpen, setIsTraceOpen] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,7 +51,10 @@ export default function Home() {
     setIsSyncing(true);
     try {
         await fetch("http://localhost:8000/sync-knowledge", { method: "POST" });
-    } catch (e) {}
+        setIsOnline(true);
+    } catch (e) {
+        setIsOnline(false);
+    }
     setIsSyncing(false);
   };
 
@@ -167,7 +171,10 @@ export default function Home() {
                     {filteredHistory.map(m => (
                     <div key={m.id} className="group relative">
                         <button 
-                            onClick={() => setStatus({ status: "completed", message: "RESTORED", result: m.result, progress: 100 })}
+                            onClick={() => {
+                                setIsTraceOpen(false);
+                                setStatus({ status: "completed", message: "RESTORED", result: m.result, progress: 100 });
+                            }}
                             className="w-full text-left p-3.5 rounded-xl hover:bg-white/5 text-[11px] text-slate-400 hover:text-white transition-all line-clamp-1 border border-transparent pr-10 font-bold"
                         >
                             {m.goal}
@@ -212,16 +219,30 @@ export default function Home() {
                             }
                         }} />
                     </label>
+                    <label className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/2 border border-white/5 hover:border-cyan-500/30 text-slate-400 hover:text-white transition-all text-[11px] font-black uppercase tracking-widest cursor-pointer group">
+                        <Workflow size={14} className="text-cyan-500" /> Train Local File
+                        <input type="file" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                await fetch("http://localhost:8000/sync-knowledge", { method: "POST" });
+                            }
+                        }} />
+                    </label>
                 </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-white/5 flex items-center gap-3 px-2 shrink-0">
-            <motion.img animate={{ opacity: [0.6, 1, 0.6] }} transition={{ duration: 4, repeat: Infinity }} src="/aura-monolith.png" className="w-9 h-9 rounded-xl object-cover border border-white/10 shadow-lg pulse-glow" />
-            <div className="flex flex-col">
-                <span className="text-[10px] font-black text-white uppercase tracking-tighter">AuraCore Matrix</span>
-                <span className="text-[9px] text-cyan-500 font-bold uppercase tracking-[0.3em]">FLUX_OFFLINE</span>
+          <div className="pt-4 border-t border-white/5 flex items-center justify-between px-2 shrink-0">
+            <div className="flex items-center gap-3">
+                <motion.img animate={{ opacity: [0.6, 1, 0.6] }} transition={{ duration: 4, repeat: Infinity }} src="/aura-monolith.png" className="w-9 h-9 rounded-xl object-cover border border-white/10 shadow-lg pulse-glow" />
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-white uppercase tracking-tighter">AuraCore Matrix</span>
+                    <span className={`text-[9px] font-bold uppercase tracking-[0.3em] ${isOnline ? 'text-emerald-400' : 'text-slate-600'}`}>
+                        {isOnline ? 'FLUX_ONLINE' : 'FLUX_OFFLINE'}
+                    </span>
+                </div>
             </div>
+            <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`}></div>
           </div>
         </div>
       </motion.aside>
@@ -256,7 +277,7 @@ export default function Home() {
                     }`}></div>
                     <span className="text-[9px] font-black text-white uppercase tracking-[0.3em]">{status.message}</span>
                  </div>
-                 <button onClick={syncNeuralMemory} className={`p-2.5 text-slate-500 hover:text-cyan-400 transition-all ${isSyncing ? 'animate-spin text-cyan-400' : ''}`}>
+                 <button onClick={syncNeuralMemory} className={`p-2.5 transition-all ${isOnline ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]' : 'text-slate-600 hover:text-white'} ${isSyncing ? 'animate-spin' : ''}`}>
                     <Wifi size={20}/>
                  </button>
             </div>
@@ -265,19 +286,26 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-14 relative pb-48">
             <div className="max-w-4xl mx-auto w-full">
                 {status.status === 'idle' ? (
-                    <div className="h-[65vh] flex flex-col items-center justify-center text-center space-y-12">
-                        <motion.img animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 6, repeat: Infinity }} src="/aura-monolith.png" className="w-20 h-20 rounded-[28px] border border-white/10 shadow-2xl opacity-60 pulse-glow mb-4" />
-                        <h2 className="text-6xl font-black text-white italic tracking-tighter max-w-2xl leading-[0.9]">Master the Matrix {version}</h2>
+                    <div className="flex flex-col items-center justify-start pt-2 text-center space-y-4">
+                        <div className="flex items-center gap-6 mb-2">
+                            <motion.img 
+                                animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }} 
+                                transition={{ duration: 6, repeat: Infinity }} 
+                                src="/aura-monolith.png" 
+                                className="w-10 h-10 rounded-xl border border-white/10 shadow-2xl pulse-glow" 
+                            />
+                            <h2 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter leading-none">Master the Matrix {version}</h2>
+                        </div>
                         
-                        <div className="grid grid-cols-2 gap-4 w-full max-w-lg mt-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
                             {starters.map((s, idx) => (
                                 <button 
                                     key={idx}
                                     onClick={() => handleLaunch(s.label)}
-                                    className="flex items-center gap-3 p-4 bg-white/2 border border-white/5 hover:border-cyan-500/30 hover:bg-white/5 transition-all rounded-2xl text-left group shadow-xl"
+                                    className="flex items-center gap-3 p-3 bg-white/2 border border-white/5 hover:border-cyan-500/30 hover:bg-white/5 transition-all rounded-2xl text-left group shadow-lg"
                                 >
-                                    <div className="p-2.5 bg-white/5 rounded-lg text-slate-600 group-hover:text-cyan-400 transition-colors">{s.icon}</div>
-                                    <span className="text-[11px] font-bold text-slate-500 group-hover:text-white transition-colors">{s.label}</span>
+                                    <div className="p-2 bg-white/5 rounded-lg text-slate-600 group-hover:text-cyan-400 transition-colors">{s.icon}</div>
+                                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-white transition-colors">{s.label}</span>
                                 </button>
                             ))}
                         </div>
