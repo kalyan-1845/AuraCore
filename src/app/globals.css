@@ -4,40 +4,75 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 5, 5, 15;
-  --background-end-rgb: 10, 10, 25;
+  --background-start-rgb: 2, 2, 10;
+  --background-end-rgb: 5, 5, 15;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: #020206;
   min-height: 100vh;
+  overflow-x: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Moving Mesh Background */
+.mesh-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-color: #020206;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(210,100%,10%,1) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(240,100%,10%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 100%, hsla(280,100%,5%,1) 0, transparent 50%);
+  animation: mesh-move 20s ease infinite alternate;
+}
+
+@keyframes mesh-move {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .gradient-text {
-  background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.agent-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.neon-border {
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
 }
 
-.agent-card:hover {
-  transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.06);
+.glow-blue {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+/* Markdown Styling */
+.intel-report h1 { @apply text-3xl font-black mb-6 text-white; }
+.intel-report h2 { @apply text-xl font-bold mt-8 mb-4 text-blue-400; }
+.intel-report p { @apply text-slate-400 mb-6 leading-8; }
+.intel-report ul { @apply list-disc list-inside space-y-4 mb-6 text-slate-400; }
+.intel-report strong { @apply text-blue-300 font-bold; }
