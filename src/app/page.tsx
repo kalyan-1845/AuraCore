@@ -2,246 +2,276 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles, Shield, Globe, Zap, History, Download, Loader2, CheckCircle, Copy, Cpu, Activity, Terminal, Bot, ChevronRight, Share2 } from "lucide-react";
+import { 
+  Send, Shield, History as LucideHistory, Download, 
+  Loader2, CheckCircle, Copy, Cpu, Activity as LucideActivity, Terminal, 
+  Brain, Minimize2, Maximize2, Wifi, Command, Trash2, 
+  PlusCircle, Share2, Menu, X, Workflow, ChevronDown
+} from "lucide-react";
 
-interface Mission {
-  id: number;
-  goal: string;
-  result: string;
-  timestamp: string;
-}
-
-interface AgentStatus {
-  status: "idle" | "initializing" | "planning" | "researching" | "building" | "completed" | "error";
-  message: string;
-  result?: string;
-  progress: number;
-}
+interface MissionData { id: number; goal: string; result: string; timestamp: string; }
+interface AgentStatus { status: "idle" | "initializing" | "planning" | "researching" | "building" | "completed" | "error"; message: string; result?: string; progress: number; }
+type AuraVersion = "v5.1" | "v5.2" | "v5.3";
 
 export default function Home() {
-  const [goal, setGoal] = useState<string>("");
-  const [status, setStatus] = useState<AgentStatus>({ status: "idle", message: "SYSTEM_READY", result: "", progress: 0 });
-  const [history, setHistory] = useState<Mission[]>([]);
-  const [technicalLogs, setTechnicalLogs] = useState<string[]>([]);
-  const [isSidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [goal, setGoal] = useState("");
+  const [version, setVersion] = useState<AuraVersion>("v5.1");
+  const [status, setStatus] = useState<AgentStatus>({ status: "idle", message: "READY", result: "", progress: 0 });
+  const [historyItems, setHistoryItems] = useState<MissionData[]>([]);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { 
     fetchHistory();
+    syncNeuralMemory();
     setTimeout(() => inputRef.current?.focus(), 500);
   }, []);
 
-  useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [technicalLogs]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [status.result, status.status]);
 
   const fetchHistory = async () => {
     try {
       const res = await fetch("http://localhost:8000/history");
       const data = await res.json();
-      setHistory(data);
+      setHistoryItems(data);
     } catch (e) {}
   };
 
-  const addLog = (msg: string) => {
-    setTechnicalLogs(prev => [...prev.slice(-10), `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  const syncNeuralMemory = async () => {
+    setIsSyncing(true);
+    try {
+        await fetch("http://localhost:8000/sync-knowledge", { method: "POST" });
+    } catch (e) {}
+    setIsSyncing(false);
   };
 
   const handleLaunch = async (customGoal?: string) => {
     const activeGoal = customGoal || goal;
     if (!activeGoal) return;
-    setGoal(activeGoal);
-    setTechnicalLogs([]);
-    setStatus({ status: "initializing", message: "LAUNCHING_MATRIX", result: "", progress: 10 });
-    addLog("Uplink initialized.");
-    
+    setGoal(""); 
+    setStatus({ status: "initializing", message: "UPLINKING...", result: "", progress: 5 });
+
+    // Map versions to internal specializations
+    const specMap = { "v5.1": "General", "v5.2": "Analyst", "v5.3": "Coder" };
+
     try {
       const res = await fetch("http://localhost:8000/stream-kickoff", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal: activeGoal }),
+        body: JSON.stringify({ goal: activeGoal, specialization: specMap[version] }),
       });
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
-      if (!reader) return;
-
-      let lastBatch = "";
-      while (true) {
+      while (reader) {
         const { value, done } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);
         const lines = chunk.split("\n\n");
         for (const line of lines) {
           if (line.startsWith("data: ")) {
-            const data = JSON.parse(line.replace("data: ", ""));
-            if (data.status === "completed") {
-                setStatus({ status: "completed", message: "MISSION_SUCCESS", result: data.result, progress: 100 });
-                addLog("Data finalized.");
-                fetchHistory();
-            } else if (data.status === "building") {
-                lastBatch = data.full_text;
-                setStatus({ status: "building", message: "PROCESSING_DATA", result: lastBatch, progress: 60 });
-            } else {
-                setStatus(prev => ({ ...prev, status: data.status, message: data.message.toUpperCase(), progress: 30 }));
-                addLog(data.message);
-            }
+            try {
+                const data = JSON.parse(line.replace("data: ", ""));
+                if (data.status === "completed") {
+                    setStatus({ status: "completed", message: "COMPLETED", result: data.result, progress: 100 });
+                    fetchHistory();
+                } else if (data.status === "building") {
+                    setStatus({ status: "building", message: "SYNTHESIZING", result: data.full_text, progress: 60 });
+                }
+            } catch (err) {}
           }
         }
       }
     } catch (e) {
-      addLog("Link error.");
-      setStatus({ status: "error", message: "DOWNLINK_LOST", result: "", progress: 0 });
+      setStatus({ status: "error", message: "FAILED", result: "", progress: 0 });
     }
   };
 
+  const downloadFullIntel = async () => {
+    try {
+        const res = await fetch("http://localhost:8000/export-knowledge");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `AuraCore_Bridge.txt`;
+        a.click();
+    } catch (e) {}
+  };
+
+  const addLog = (msg: string) => console.log(`[AuraCore] ${msg}`);
+
   return (
-    <div className="flex flex-col min-h-screen text-[#d0d0f0] selection:bg-blue-500/30">
+    <div className="flex h-screen bg-[#020206] text-slate-200 overflow-hidden font-sans relative">
+      <div className="mesh-bg fixed inset-0 z-0" />
       
-      {/* Moving Background */}
-      <div className="mesh-bg" />
+      {/* ChatGPT-Style Sidebar */}
+      <motion.aside 
+        initial={false}
+        animate={{ width: isSidebarOpen ? 280 : 0, opacity: isSidebarOpen ? 1 : 0 }}
+        className="h-full bg-black/40 backdrop-blur-3xl border-r border-white/5 flex flex-col relative z-[200] overflow-hidden shrink-0"
+      >
+        <div className="p-4 flex flex-col h-full w-[280px]">
+          <button 
+            onClick={() => setStatus({ status: "idle", message: "READY", result: "", progress: 0 })}
+            className="flex items-center gap-3 w-full p-3 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-sm font-bold text-white mb-6 group"
+          >
+            <PlusCircle size={18} className="text-blue-500" />
+            New Mission
+          </button>
 
-      {/* Modern Top Nav */}
-      <nav className="fixed top-0 left-0 w-full h-16 flex items-center justify-between px-8 z-50 glass border-b border-white/5">
-        <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Cpu size={20} className="text-white" />
-            </div>
-            <h1 className="text-xl font-black italic tracking-tighter text-white">AURA<span className="text-blue-500">CORE</span></h1>
-        </div>
-        <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-slate-400 hover:text-white transition-all uppercase">
-                <History size={14} /> History
-            </button>
-        </div>
-      </nav>
-
-      {/* Archives Modal */}
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-xl z-[100] flex justify-center items-center p-6">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-4xl bg-[#080812] border border-white/10 rounded-[40px] p-10 max-h-[80vh] overflow-hidden flex flex-col">
-                <div className="flex justify-between items-center mb-10">
-                    <h2 className="text-4xl font-black tracking-tighter text-white">ARCHIVES</h2>
-                    <button onClick={() => setSidebarOpen(false)} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 font-bold transition-all">X</button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto pr-4 custom-scrollbar flex-1 pb-4">
-                    {history.map((m) => (
-                        <div key={m.id} onClick={() => { setGoal(m.goal); setStatus({ status: "completed", message: "RESTORED", result: m.result, progress: 100 }); setSidebarOpen(false); }} className="p-8 bg-white/2 hover:bg-blue-600/10 border border-white/5 rounded-[30px] cursor-pointer transition-all group">
-                            <span className="text-[10px] text-blue-500 font-bold block mb-4">{new Date(m.timestamp).toLocaleDateString()}</span>
-                            <p className="font-bold text-sm leading-relaxed group-hover:text-white transition-colors">{m.goal}</p>
-                        </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6 pr-2">
+            <div>
+                <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 px-2">Mission History</h3>
+                <div className="space-y-1">
+                    {historyItems.map(m => (
+                    <button 
+                        key={m.id} 
+                        onClick={() => setStatus({ status: "completed", message: "RESTORED", result: m.result, progress: 100 })}
+                        className="w-full text-left p-3 rounded-xl hover:bg-white/5 text-xs text-slate-400 hover:text-white transition-all line-clamp-1 border border-transparent hover:border-white/5"
+                    >
+                        {m.goal}
+                    </button>
                     ))}
                 </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex-1 mt-20 max-w-6xl mx-auto w-full px-6 py-12 flex flex-col gap-12 z-10">
-        
-        {/* Main Hero Header */}
-        <section className="text-center space-y-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 rounded-full border border-blue-500/20 mb-4">
-                <Sparkles size={14} className="text-blue-400" />
-                <span className="text-[10px] font-bold tracking-[0.2em] text-blue-400 uppercase">Multi-Agent Intelligence Matrix</span>
-            </motion.div>
-            <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">
-                WHAT IS YOUR <br/> <span className="gradient-text">NEXT MISSION?</span>
-            </h2>
-        </section>
-
-        {/* The Command Bar */}
-        <div className="max-w-4xl mx-auto w-full">
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 bg-white/2 border border-white/10 rounded-[32px] p-2 flex items-center focus-within:border-blue-500/40 focus-within:bg-blue-500/5 transition-all shadow-2xl">
-                    <div className="w-12 h-12 hidden md:flex items-center justify-center text-blue-500/30">
-                        <Terminal size={24} />
-                    </div>
-                    <input 
-                        ref={inputRef}
-                        value={goal}
-                        onChange={(e) => setGoal(e.target.value)}
-                        placeholder="Define mission goal..."
-                        style={{ color: 'white' }}
-                        className="flex-1 bg-transparent border-none py-6 px-4 md:px-2 text-2xl font-bold outline-none placeholder:text-slate-700 caret-blue-500"
-                        onKeyDown={(e) => e.key === "Enter" && handleLaunch()}
-                    />
-                </div>
-                <button 
-                  onClick={() => handleLaunch()}
-                  className="bg-blue-600 text-white px-12 py-8 rounded-[32px] font-black shadow-2xl hover:bg-blue-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 text-xl tracking-tighter"
-                >
-                  DEPLOY MISSION <Send size={24} />
-                </button>
             </div>
-            <div className="flex flex-wrap justify-center gap-6 mt-8">
-                {["Target AI Market", "Sustainablity Strategy", "Code Architect"].map(s => (
-                    <button key={s} onClick={() => handleLaunch(s)} className="text-[10px] font-bold tracking-[0.3em] text-slate-600 hover:text-white transition-colors uppercase">//{s}</button>
+
+            <div className="pt-4 border-t border-white/5">
+                <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 px-2">Neural Portability</h3>
+                <div className="space-y-2">
+                    <button onClick={downloadFullIntel} className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-600/5 border border-blue-500/10 hover:border-blue-500/50 text-slate-300 hover:text-white transition-all text-[11px] font-bold group">
+                        <Download size={14} className="text-blue-500" /> Export State
+                    </button>
+                    <label className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/2 border border-white/5 hover:border-blue-500/30 text-slate-400 hover:text-white transition-all text-[11px] font-bold cursor-pointer group">
+                        <PlusCircle size={14} className="text-slate-500 group-hover:text-blue-400" /> Restore State
+                        <input type="file" className="hidden" accept=".txt" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = async (ev) => {
+                                    const content = ev.target?.result as string;
+                                    await fetch("http://localhost:8000/import-knowledge", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ file_path: content })
+                                    });
+                                    fetchHistory();
+                                };
+                                reader.readAsText(file);
+                            }
+                        }} />
+                    </label>
+                </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/5 pb-10">
+                <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 px-2">Universal Trainer</h3>
+                <label className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/2 border border-white/5 hover:border-cyan-500/30 text-slate-400 hover:text-white transition-all text-[11px] font-bold cursor-pointer group">
+                    <Workflow size={14} className="text-cyan-500" /> Train Local File
+                    <input type="file" className="hidden" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                            await fetch("http://localhost:8000/sync-knowledge", { method: "POST" });
+                        }
+                    }} />
+                </label>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-white/5 flex items-center gap-3 px-2 shrink-0 bg-black/5 rounded-t-2xl">
+            <img src="/aura-monolith.png" className="w-8 h-8 rounded-lg object-cover border border-white/10 shadow-lg pulse-glow" />
+            <div className="flex flex-col">
+                <span className="text-[10px] font-black text-white uppercase tracking-tighter">AuraCore Matrix</span>
+                <span className="text-[9px] text-blue-500 font-bold uppercase tracking-widest">STABLE_V5</span>
+            </div>
+          </div>
+        </div>
+      </motion.aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative h-full z-10 overflow-hidden">
+        
+        <header className="h-14 border-b border-white/5 flex items-center justify-between px-6 bg-black/20 backdrop-blur-sm shrink-0">
+            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-white/5 rounded-lg text-slate-500 transition-all">
+                <Menu size={20} />
+            </button>
+
+            {/* ChatGPT-Style Version Switcher */}
+            <div className="flex items-center gap-1 p-1 bg-white/5 rounded-2xl border border-white/5">
+                {(["v5.1", "v5.2", "v5.3"] as AuraVersion[]).map(v => (
+                    <button 
+                        key={v} 
+                        onClick={() => setVersion(v)}
+                        className={`px-4 py-1.5 rounded-xl text-[10px] font-black transition-all ${version === v ? 'bg-white/10 text-white shadow-xl' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                        {v}
+                    </button>
                 ))}
+            </div>
+
+            <div className="flex items-center gap-4">
+                 <button onClick={syncNeuralMemory} className={`p-2 text-slate-500 hover:text-white transition-all ${isSyncing ? 'animate-spin text-blue-500' : ''}`}>
+                    <Wifi size={18}/>
+                 </button>
+            </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-12 relative pb-40">
+            <div className="max-w-3xl mx-auto w-full">
+                {status.status === 'idle' ? (
+                    <div className="h-[60vh] flex flex-col items-center justify-center text-center space-y-6">
+                        <img src="/aura-monolith.png" className="w-16 h-16 rounded-2xl border border-white/10 shadow-2xl opacity-20" />
+                        <h2 className="text-4xl font-black text-white italic tracking-tighter max-w-lg">How can AuraCore {version} help you?</h2>
+                    </div>
+                ) : (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10"><img src="/aura-monolith.png" className="w-full h-full object-cover" /></div>
+                                <span className="text-[11px] font-black text-white tracking-widest uppercase">Intelligence Flow <span className="text-blue-500">[{version}]</span></span>
+                            </div>
+                            <div className="intel-report leading-relaxed">
+                                {status.result || <div className="flex items-center gap-2 text-blue-500 animate-pulse font-mono text-xs italic"><Loader2 size={14} className="animate-spin" /> Synthesizing Data...</div>}
+                            </div>
+                            {status.result && (
+                                <div className="flex gap-2">
+                                    <button onClick={() => navigator.clipboard.writeText(status.result || "")} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-500 transition-all"><Copy size={16}/></button>
+                                    <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-500 transition-all"><Download size={16}/></button>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+                <div ref={chatEndRef} className="h-10" />
             </div>
         </div>
 
-        {/* Results HUB */}
-        {(status.status !== "idle" || technicalLogs.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 border-t border-white/5 pt-20">
-                
-                {/* Tech Log HUD */}
-                <div className="md:col-span-1 space-y-6">
-                    <header className="flex items-center gap-3">
-                        <Activity size={16} className="text-blue-500" />
-                        <span className="text-xs font-black tracking-widest uppercase">System Logs</span>
-                    </header>
-                    <div className="space-y-3">
-                        <div className="flex flex-col gap-3">
-                            <AgentIcon label="Lead" active={status.status === "planning"} icon={<Shield size={14}/>} />
-                            <AgentIcon label="Search" active={status.status === "building" && !status.result} icon={<Globe size={14}/>} />
-                            <AgentIcon label="Build" active={status.status === "building" && !!status.result} icon={<Zap size={14}/>} />
-                        </div>
-                        <div className="h-64 bg-black/40 border border-white/5 rounded-3xl p-6 overflow-y-auto space-y-2 text-[10px] font-mono text-blue-500/40 custom-scrollbar">
-                            {technicalLogs.map((log, i) => <div key={i}>{log}</div>)}
-                            <div ref={logEndRef} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* The Report Matrix */}
-                <div className="md:col-span-3 space-y-8">
-                    <header className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className={`w-3 h-3 rounded-full ${status.status === 'completed' ? 'bg-green-500' : 'bg-blue-500 animate-pulse'}`} />
-                            <h3 className="text-sm font-black tracking-[0.2em] text-blue-400 uppercase">{status.message}</h3>
-                        </div>
-                        {status.result && (
-                            <div className="flex gap-4">
-                                <button onClick={() => navigator.clipboard.writeText(status.result!)} className="p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all"><Copy size={16} /></button>
-                                <button className="p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-all"><Share2 size={16} /></button>
-                            </div>
-                        )}
-                    </header>
-                    
-                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass rounded-[40px] p-12 md:p-20 shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-16 opacity-[0.02] -rotate-12 pointer-events-none group-hover:opacity-[0.05] transition-opacity">
-                            <Bot size={400} />
-                        </div>
-                        <div className="relative z-10 intel-report whitespace-pre-wrap font-sans">
-                            {status.result || ">_ESTABLISHING_ENCRYPTED_DOWNLINK..."}
-                        </div>
-                    </motion.div>
+        {/* Bottom Input Area */}
+        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-[150] pointer-events-none">
+            <div className="max-w-3xl mx-auto w-full pointer-events-auto">
+                <div className="relative flex items-center bg-[#0d0d12]/95 border border-white/10 rounded-[28px] p-2 pr-4 shadow-[0_30px_70px_-15px_rgba(0,0,0,1)]">
+                    <input
+                        ref={inputRef}
+                        value={goal}
+                        onChange={e => setGoal(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleLaunch()}
+                        className="flex-1 bg-transparent border-none outline-none text-base md:text-lg text-white placeholder:text-slate-800 px-6 py-3"
+                        placeholder={`Message AuraCore ${version}...`}
+                    />
+                    <button 
+                        onClick={() => handleLaunch()} 
+                        disabled={!goal || (status.status !== 'idle' && status.status !== 'completed' && status.status !== 'error')} 
+                        className="p-3 bg-blue-600 hover:bg-blue-500 disabled:bg-white/5 text-white rounded-[22px] transition-all shadow-xl shadow-blue-600/20"
+                    >
+                        <Send size={18} />
+                    </button>
                 </div>
             </div>
-        )}
-
+        </div>
       </div>
-    </div>
-  );
-}
-
-function AgentIcon({ label, active, icon }: { label: string; active: boolean, icon: React.ReactNode }) {
-  return (
-    <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl border transition-all ${active ? 'bg-blue-600/10 border-blue-500/40' : 'bg-white/2 border-white/5 opacity-30 font-bold text-slate-800'}`}>
-       <div className={`${active ? 'text-blue-400' : 'text-slate-800'}`}>{icon}</div>
-       <span className="text-[10px] font-black tracking-widest uppercase">{label}</span>
     </div>
   );
 }
