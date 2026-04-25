@@ -1,65 +1,100 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --accent: #00f2ff;
+  --aura-cyan: #22d3ee;
+  --aura-black: #000000;
+  --grid-color: rgba(34, 211, 238, 0.05);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, sans-serif;
-  overflow-x: hidden;
-  letter-spacing: -0.01em;
+  background-color: var(--aura-black) !important;
+  color: #e2e8f0;
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
 }
 
-/* Grok-Flux Background */
+/* Neural Mesh Background Shader */
 .mesh-bg {
   position: fixed;
   inset: 0;
-  z-index: -1;
-  background-image: radial-gradient(circle at top right, #001f3f 0%, #000000 100%);
-  background-size: cover;
+  z-index: 0;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.03) 0%, transparent 50%),
+    linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  animation: mesh-pulse 15s ease-in-out infinite;
+  pointer-events: none;
 }
 
+@keyframes mesh-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* Glass Card Premium Effect */
 .glass-card {
-  background: rgba(10, 10, 15, 0.5);
+  background: rgba(10, 10, 10, 0.7);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+/* Telemetry Jitter Animation */
+@keyframes jitter {
+  0%, 100% { height: 20%; }
+  25% { height: 80%; }
+  50% { height: 40%; }
+  75% { height: 95%; }
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+
+.telemetry-bar {
+  animation: jitter 0.5s infinite alternate ease-in-out;
 }
+
+/* Custom Scrollbar Elite */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
 }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--aura-cyan); }
 
-/* Intelligence Report Styling - Zero Apply */
-.intel-report {
-  color: #f8fafc;
-  font-size: 1.05rem;
-  line-height: 1.7;
+/* Markdown Elite Typography */
+.markdown-content h1, .markdown-content h2, .markdown-content h3 {
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  text-transform: uppercase;
+  font-style: italic;
+  font-size: 1.5rem;
+}
+.markdown-content p { margin-bottom: 1rem; color: #cbd5e1; }
+.markdown-content ul { list-style-type: none; padding-left: 0; margin-bottom: 1rem; }
+.markdown-content li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-content li::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  color: var(--aura-cyan);
+  font-weight: bold;
 }
 
+/* Glow Pulse for Logos */
 .pulse-glow {
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
-    animation: flux-pulse 4s infinite ease-in-out;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.4));
+  animation: pulse-glow-anim 4s infinite;
 }
 
-@keyframes flux-pulse {
-    0%, 100% { opacity: 0.8; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 242, 255, 0.4); }
+@keyframes pulse-glow-anim {
+  0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.3)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 15px rgba(34, 211, 238, 0.6)); }
 }
-
-.intel-report h1 { font-size: 2rem; font-weight: 800; color: white; margin-bottom: 1.5rem; }
-.intel-report h2 { font-size: 1.5rem; font-weight: 700; color: #60a5fa; margin-top: 2rem; margin-bottom: 1rem; }
-.intel-report p { margin-bottom: 1.5rem; }
-.intel-report code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #93c5fd; }
-.intel-report pre { background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 1rem; margin: 1.5rem 0; overflow-x: auto; }
