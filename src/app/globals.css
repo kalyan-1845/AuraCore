@@ -1,100 +1,136 @@
 @import "tailwindcss";
 
 :root {
-  --aura-cyan: #22d3ee;
-  --aura-black: #000000;
-  --grid-color: rgba(34, 211, 238, 0.05);
+  --aura-cyan: #06b6d4;
+  --aura-cyan-glow: rgba(6, 182, 212, 0.5);
+  --aura-black: #020617; /* Deepest Indigo-Black */
+  --aura-accent: #6366f1; /* Indigo Accent */
+  --grid-color: rgba(6, 182, 212, 0.03);
 }
 
 body {
   background-color: var(--aura-black) !important;
-  color: #e2e8f0;
+  color: #f8fafc;
   margin: 0;
   overflow: hidden;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
 }
 
-/* Neural Mesh Background Shader */
+/* Neural Mesh Background - More Subtle & Depth */
 .mesh-bg {
   position: fixed;
   inset: 0;
   z-index: 0;
   background: 
-    radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.03) 0%, transparent 50%),
-    linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
-  animation: mesh-pulse 15s ease-in-out infinite;
+    radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 70%),
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 100% 100%, 60px 60px, 60px 60px;
   pointer-events: none;
 }
 
-@keyframes mesh-pulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.05); }
+.mesh-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, var(--aura-black) 90%);
 }
 
-/* Glass Card Premium Effect */
+/* Premium Glassmorphism */
 .glass-card {
-  background: rgba(10, 10, 10, 0.7);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 4px 6px -1px cubic-bezier(0, 0, 0.2, 1),
+    0 10px 15px -3px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.03);
 }
 
-/* Telemetry Jitter Animation */
+/* Telemetry Jitter - Mechanical Feel */
 @keyframes jitter {
-  0%, 100% { height: 20%; }
-  25% { height: 80%; }
-  50% { height: 40%; }
-  75% { height: 95%; }
+  0%, 100% { height: 15%; opacity: 0.3; }
+  25% { height: 85%; opacity: 0.8; }
+  50% { height: 35%; opacity: 0.5; }
+  75% { height: 95%; opacity: 1; }
 }
 
 .telemetry-bar {
-  animation: jitter 0.5s infinite alternate ease-in-out;
+  animation: jitter 0.4s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(to top, var(--aura-cyan), var(--aura-accent));
 }
 
-/* Custom Scrollbar Elite */
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+/* Professional Scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--aura-cyan); }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--aura-cyan-glow); }
 
-/* Markdown Elite Typography */
+/* Markdown Typography - Editorial Elite */
+.markdown-content {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: #cbd5e1;
+}
+
 .markdown-content h1, .markdown-content h2, .markdown-content h3 {
   color: #fff;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  margin-bottom: 1rem;
-  margin-top: 1.5rem;
-  text-transform: uppercase;
-  font-style: italic;
-  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 2rem 0 1rem 0;
+  font-family: 'Outfit', sans-serif;
 }
-.markdown-content p { margin-bottom: 1rem; color: #cbd5e1; }
-.markdown-content ul { list-style-type: none; padding-left: 0; margin-bottom: 1rem; }
+
+.markdown-content h1 { font-size: 1.75rem; border-left: 4px solid var(--aura-cyan); padding-left: 1rem; }
+.markdown-content h2 { font-size: 1.4rem; color: #e2e8f0; }
+
+.markdown-content p { margin-bottom: 1.25rem; }
+
+.markdown-content ul { list-style-type: none; padding-left: 0; margin-bottom: 1.25rem; }
 .markdown-content li {
   position: relative;
-  padding-left: 1.5rem;
-  margin-bottom: 0.5rem;
+  padding-left: 1.75rem;
+  margin-bottom: 0.75rem;
 }
 .markdown-content li::before {
-  content: '>';
+  content: '→';
   position: absolute;
   left: 0;
   color: var(--aura-cyan);
-  font-weight: bold;
+  font-weight: 300;
 }
 
-/* Glow Pulse for Logos */
+/* Glow Elements */
 .pulse-glow {
-  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.4));
-  animation: pulse-glow-anim 4s infinite;
+  filter: drop-shadow(0 0 12px var(--aura-cyan-glow));
 }
 
-@keyframes pulse-glow-anim {
-  0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.3)); }
-  50% { opacity: 1; filter: drop-shadow(0 0 15px rgba(34, 211, 238, 0.6)); }
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.btn-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.btn-premium:hover::before {
+  transform: translateX(100%);
+}
+
+@keyframes neural-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+

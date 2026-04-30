@@ -36,6 +36,8 @@ export default function Home() {
   const [traceShards, setTraceShards] = useState<TraceShard[]>([]);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState<{id: number, msg: string}[]>([]);
+  const [license, setLicense] = useState({ valid: true, message: "PROVISIONING...", status: "PENDING" });
+
   
   const inputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -43,8 +45,20 @@ export default function Home() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => { 
+    const checkLicense = async () => {
+        try {
+            const res = await fetch("http://localhost:8000/license-status");
+            const data = await res.json();
+            setLicense(data);
+        } catch (e) {
+            setLicense({ valid: false, message: "BACKEND_UNREACHABLE", status: "OFFLINE" });
+        }
+    };
+    
+    checkLicense();
     fetchHistory();
     syncNeuralMemory();
+
     setTelemetry(prev => ({ 
         ...prev,
         load: `0.${Math.floor(Math.random() * 99)}ms`
@@ -76,7 +90,6 @@ export default function Home() {
       const shardsCount = (kText.match(/SOURCE:/g) || []).length;
       setTelemetry(prev => ({ ...prev, shards: shardsCount }));
 
-      // Full Neural Pre-loading (Warm up all 50 missions)
       list.slice(0, 50).forEach(async (m: any) => {
         if (!historyCache[m.id]) {
             try {
@@ -122,7 +135,6 @@ export default function Home() {
     const activeGoal = customGoal || goal;
     if (!activeGoal) return;
     
-    // Neural Slate Wipe
     setGoal(""); 
     setCurrentGoal(activeGoal);
     setIsTraceOpen(false);
@@ -217,18 +229,35 @@ export default function Home() {
     <div className={`flex h-screen bg-[#000000] text-slate-200 overflow-hidden font-sans relative transition-all duration-1000 ${status.status === 'building' ? 'bg-[#020617]' : 'bg-[#000000]'}`}>
       <div className={`mesh-bg fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${status.status === 'building' ? 'opacity-80' : 'opacity-40'}`} style={{ animation: status.status === 'building' ? 'neural-pulse 2s infinite ease-in-out' : 'neural-pulse 8s infinite ease-in-out' }} />
       
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] md:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       <motion.aside 
         initial={false}
-        animate={{ width: isSidebarOpen ? 280 : 0, opacity: isSidebarOpen ? 1 : 0 }}
-        className="h-full bg-black/80 backdrop-blur-3xl border-r border-white/5 flex flex-col relative z-[200] overflow-hidden shrink-0 shadow-[20px_0_100px_rgba(0,0,0,0.8)]"
+        animate={{ 
+          width: isSidebarOpen ? 280 : 0, 
+          opacity: isSidebarOpen ? 1 : 0,
+          x: isSidebarOpen ? 0 : -20
+        }}
+        className={`h-full bg-black/90 backdrop-blur-3xl border-r border-white/5 flex flex-col fixed md:relative z-[200] overflow-hidden shrink-0 shadow-[20px_0_100px_rgba(0,0,0,0.8)] transition-all`}
       >
         <div className="p-5 flex flex-col h-full w-[280px]">
           <button 
             onClick={() => setStatus({ status: "idle", message: "READY", result: "", progress: 0 })}
-            className="flex items-center gap-3 w-full p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-sm font-black text-white mb-6 group shadow-2xl"
+            className="flex items-center gap-3 w-full p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all text-[11px] font-black text-white mb-8 group shadow-2xl btn-premium"
           >
-            <PlusCircle size={18} className="text-cyan-500" />
-            NEW MISSION
+            <PlusCircle size={16} className="text-cyan-500" />
+            INITIALIZE NEW MISSION
           </button>
 
           <div className="mb-6 px-1">
@@ -243,10 +272,7 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-4 px-2">
                     <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ">Mission History</h3>
                     <div className="flex items-center gap-2">
-                        <button 
-                            onClick={fetchHistory}
-                            className="p-1 text-slate-700 hover:text-cyan-500 transition-all opacity-40 hover:opacity-100" 
-                        >
+                        <button onClick={fetchHistory} className="p-1 text-slate-700 hover:text-cyan-500 transition-all opacity-40 hover:opacity-100">
                             <LucideHistory size={12} />
                         </button>
                         <button 
@@ -256,7 +282,7 @@ export default function Home() {
                                     fetchHistory();
                                 }
                             }}
-                            className="p-1 text-slate-700 hover:text-red-500 transition-all opacity-40 hover:opacity-100" 
+                            className="p-1 text-slate-700 hover:text-red-500 transition-all opacity-40 hover:opacity-100"
                         >
                             <Trash2 size={12} />
                         </button>
@@ -268,13 +294,10 @@ export default function Home() {
                         <button 
                             onClick={async () => {
                                 setIsTraceOpen(false);
-                                
-                                // Neural Cache Check
                                 if (historyCache[m.id]) {
                                     setStatus({ status: "completed", message: "RESTORED", result: historyCache[m.id], progress: 100 });
                                     return;
                                 }
-
                                 setStatus({ status: "initializing", message: "RECALLING", result: "", progress: 20 });
                                 try {
                                     const res = await fetch(`http://localhost:8000/history?id=${m.id}`);
@@ -294,14 +317,11 @@ export default function Home() {
                             onClick={async (e) => {
                                 e.stopPropagation();
                                 if(confirm("Vanish this neural record?")) {
-                                    // Optimistic UI: Vanish instantly from screen
                                     setHistoryItems(prev => prev.filter(item => item.id !== m.id));
                                     await fetch(`http://localhost:8000/delete-mission/${m.id}`, { method: "DELETE" });
-                                    // Backend sync happens in background
                                 }
                             }}
                             className="p-2 text-slate-700 hover:text-red-500 transition-all hover:bg-red-500/10 rounded-lg shrink-0"
-                            title="Vanish Mission"
                         >
                             <Trash2 size={13} />
                         </button>
@@ -309,7 +329,6 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* Neural Telemetry HUD */}
             <div className="pt-6 border-t border-white/5 space-y-4">
                 <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2 mb-2">Telemetry</h3>
                 <div className="grid grid-cols-3 gap-2 px-2 h-10 items-end">
@@ -353,18 +372,25 @@ export default function Home() {
       </motion.aside>
 
       <div className="flex-1 flex flex-col relative h-full z-10 overflow-hidden">
-        <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-black/40 backdrop-blur-sm shrink-0">
-            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2.5 hover:bg-white/5 rounded-xl text-slate-500 transition-all border border-transparent hover:border-white/5"><Menu size={22} /></button>
-            <div className="flex-1 flex justify-center items-center gap-8">
-                <div className="flex items-center gap-1 p-1 bg-white/2 border border-white/5 rounded-2xl">
+        <header className="h-16 border-b border-white/5 flex items-center justify-between px-4 md:px-8 bg-black/60 backdrop-blur-md shrink-0 sticky top-0 z-[140]">
+            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2.5 hover:bg-white/5 rounded-xl text-slate-500 transition-all border border-transparent hover:border-white/5">
+                {isSidebarOpen ? <X size={20} /> : <Menu size={22} />}
+            </button>
+            <div className="flex-1 flex justify-center items-center gap-4 md:gap-8">
+                <div className="hidden sm:flex items-center gap-1 p-1 bg-white/5 border border-white/5 rounded-xl shadow-inner">
                     {(["v5.13-Flux", "v5.2-Analyst", "v5.3-Coder"] as AuraVersion[]).map(v => (
-                        <button key={v} onClick={() => setVersion(v)} className={`px-5 py-2 rounded-xl text-[10px] font-black tracking-[0.2em] transition-all ${version === v ? 'bg-cyan-500/20 text-cyan-400 shadow-2xl border border-cyan-500/30' : 'text-slate-600 hover:text-slate-300'}`}>{v}</button>
+                        <button key={v} onClick={() => setVersion(v)} className={`px-4 md:px-6 py-2 rounded-lg text-[10px] font-black tracking-widest transition-all duration-300 ${version === v ? 'bg-cyan-500/10 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.1)] border border-cyan-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}>{v}</button>
                     ))}
                 </div>
+                {/* Mobile version indicator */}
+                <div className="sm:hidden text-[10px] font-black text-cyan-500 uppercase tracking-widest">{version.split('-')[1]}</div>
             </div>
-            <div className="flex items-center gap-4">
-                 <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/5 shadow-2xl mr-4"><div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_15px] transition-all duration-700 ${status.status === 'idle' || status.status === 'completed' ? 'bg-cyan-500 shadow-cyan-500/50' : status.status === 'error' ? 'bg-red-500 shadow-red-500/80 animate-pulse' : status.status === 'building' ? 'bg-white shadow-white/80 animate-ping' : 'bg-orange-500 shadow-orange-500/80 animate-bounce' }`}></div><span className="text-[9px] font-black text-white uppercase tracking-[0.3em]">{status.message}</span></div>
-                 <button onClick={syncNeuralMemory} className={`p-2.5 transition-all ${isOnline ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]' : 'text-slate-600 hover:text-white'} ${isSyncing ? 'animate-spin' : ''}`}><Wifi size={20}/></button>
+            <div className="flex items-center gap-2 md:gap-4">
+                 <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-1.5 rounded-full bg-white/5 border border-white/5 shadow-2xl">
+                    <div className={`w-2 md:w-2.5 h-2 md:h-2.5 rounded-full shadow-[0_0_15px] transition-all duration-700 ${status.status === 'idle' || status.status === 'completed' ? 'bg-cyan-500 shadow-cyan-500/50' : status.status === 'error' ? 'bg-red-500 shadow-red-500/80 animate-pulse' : status.status === 'building' ? 'bg-white shadow-white/80 animate-ping' : 'bg-orange-500 shadow-orange-500/80 animate-bounce' }`}></div>
+                    <span className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-[0.2em] md:tracking-[0.3em]">{status.message}</span>
+                 </div>
+                 <button onClick={syncNeuralMemory} className={`p-2 transition-all ${isOnline ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]' : 'text-slate-600 hover:text-white'} ${isSyncing ? 'animate-spin' : ''}`}><Wifi size={18}/></button>
             </div>
         </header>
 
@@ -372,9 +398,22 @@ export default function Home() {
             <div className="max-w-4xl mx-auto w-full">
                 {status.status === 'idle' ? (
                     <div className="flex flex-col items-center justify-start pt-2 text-center space-y-4">
-                        <div className="flex items-center gap-6 mb-2">
-                            <motion.img animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 6, repeat: Infinity }} src="/aura-monolith.png" className="w-10 h-10 rounded-xl border border-white/10 shadow-2xl pulse-glow" />
-                            <h2 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter leading-none">Master the Matrix {version}</h2>
+                        <div className="flex items-center gap-4 md:gap-8 mb-6">
+                            <motion.div
+                                animate={{ 
+                                    rotate: [0, 90, 180, 270, 360],
+                                    scale: [1, 1.1, 1]
+                                }}
+                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                className="relative"
+                            >
+                                <div className="absolute inset-0 bg-cyan-500/20 blur-2xl rounded-full" />
+                                <Brain size={48} className="text-cyan-500 relative z-10 pulse-glow" />
+                            </motion.div>
+                            <h2 className="text-3xl md:text-6xl font-extrabold text-white tracking-tighter leading-none text-left">
+                                <span className="opacity-40 font-light block text-xl md:text-2xl tracking-widest mb-2 uppercase">AURACORE ELITE</span>
+                                SYSTEM_OPERATIONAL
+                            </h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
                             {starters.map((s, idx) => (
@@ -393,27 +432,27 @@ export default function Home() {
                         </div>
                     </div>
                 ) : (
-                        <div className="flex flex-col gap-6">
-                            <div className="flex justify-end pr-4">
-                                <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="max-w-[80%] p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-xl">
-                                    <div className="flex items-center gap-2 mb-2"><Command size={12} className="text-cyan-500" /> <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Mission Goal</span></div>
-                                    <p className="text-sm font-medium text-white leading-relaxed">{currentGoal}</p>
-                                </motion.div>
+                    <div className="flex flex-col gap-6">
+                        <div className="flex justify-end pr-4">
+                            <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="max-w-[80%] p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-xl">
+                                <div className="flex items-center gap-2 mb-2"><Command size={12} className="text-cyan-500" /> <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Mission Goal</span></div>
+                                <p className="text-sm font-medium text-white leading-relaxed">{currentGoal}</p>
+                            </motion.div>
+                        </div>
+                        
+                        <div className="space-y-3 relative group">
+                            <div className="flex items-center gap-4 px-2">
+                                <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/20 shadow-2xl pulse-glow"><img src="/aura-monolith.png" className="w-full h-full object-cover" /></div>
+                                <span className="text-[11px] font-black text-white tracking-[0.3em] uppercase">Intelligence Flow <span className="text-cyan-500">[{version}]</span></span>
+                                {currentGoal.length > 20 && <span className="text-[8px] font-black bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-full animate-pulse ml-4">MISSION_PROTOCOL_ENGAGED</span>}
+                                {status.status === 'completed' && (
+                                    <div className="flex-1 flex justify-end">
+                                        <button onClick={downloadMissionReport} className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-cyan-500/20 hover:border-cyan-500/30 text-[9px] font-black text-slate-400 hover:text-white transition-all">
+                                            <Download size={10} /> DOWNLOAD_REPORT
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                            
-                            <div className="space-y-3 relative group">
-                                <div className="flex items-center gap-4 px-2">
-                                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/20 shadow-2xl pulse-glow"><img src="/aura-monolith.png" className="w-full h-full object-cover" /></div>
-                                    <span className="text-[11px] font-black text-white tracking-[0.3em] uppercase">Intelligence Flow <span className="text-cyan-500">[{version}]</span></span>
-                                    {currentGoal.length > 20 && <span className="text-[8px] font-black bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-full animate-pulse ml-4">MISSION_PROTOCOL_ENGAGED</span>}
-                                    {status.status === 'completed' && (
-                                        <div className="flex-1 flex justify-end">
-                                            <button onClick={downloadMissionReport} className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-cyan-500/20 hover:border-cyan-500/30 text-[9px] font-black text-slate-400 hover:text-white transition-all">
-                                                <Download size={10} /> DOWNLOAD_REPORT
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
                             <div className="intel-report leading-[1.7] bg-[#09090b]/80 backdrop-blur-xl p-6 md:p-10 rounded-[38px] border border-white/[0.04] shadow-[0_40px_80px_-20px_rgba(0,0,0,1)] glass-card">
                                 {status.result && (
                                     <div className="mb-8 overflow-hidden rounded-2xl border border-white/5 bg-black/40">
@@ -432,7 +471,7 @@ export default function Home() {
                                         )}</AnimatePresence>
                                     </div>
                                 )}
-                                 <div className="markdown-content">
+                                <div className="markdown-content">
                                     <ReactMarkdown 
                                         remarkPlugins={[remarkGfm]} 
                                         components={{ 
@@ -499,8 +538,8 @@ export default function Home() {
                     )}
                 </AnimatePresence>
                 
-                <div className="relative flex items-center bg-[#0d0d12]/98 border border-white/10 rounded-[30px] p-2 pr-5 shadow-[0_40px_100px_-20px_rgba(0,0,0,1)] focus-within:border-cyan-500/30 transition-all group">
-                    <div className="flex gap-1 ml-4 pr-2 border-r border-white/10">
+                <div className="relative flex items-center bg-[#0d1117]/95 backdrop-blur-3xl border border-white/10 rounded-2xl md:rounded-3xl p-1.5 md:p-2.5 pr-4 md:pr-6 shadow-[0_40px_100px_-20px_rgba(0,0,0,1)] focus-within:border-cyan-500/40 transition-all group overflow-hidden">
+                    <div className="flex gap-1 ml-2 md:ml-4 pr-1 md:pr-3 border-r border-white/10">
                         <input 
                             type="file" 
                             ref={imageInputRef} 
@@ -515,41 +554,57 @@ export default function Home() {
                                 }
                             }}
                         />
-                        <button 
-                            onClick={() => imageInputRef.current?.click()}
-                            className={`p-2 transition-colors ${attachedImage ? 'text-cyan-400' : 'text-slate-600 hover:text-cyan-400'}`} 
-                            title="Vision Scan"
-                        >
+                        <button onClick={() => imageInputRef.current?.click()} className={`p-2.5 transition-colors ${attachedImage ? 'text-cyan-400' : 'text-slate-600 hover:text-cyan-400'}`} title="Vision Scan">
                             <Camera size={20}/>
                         </button>
-                        <button 
-                            onClick={() => setGoal(goal + " [Execute Deep Layer Analysis] ")}
-                            className="p-2 text-slate-600 hover:text-cyan-400 transition-colors" 
-                            title="Layer Analysis"
-                        >
+                        <button onClick={() => setGoal(goal + " [Execute Deep Layer Analysis] ")} className="hidden sm:block p-2.5 text-slate-600 hover:text-cyan-400 transition-colors" title="Layer Analysis">
                             <Layers size={20}/>
                         </button>
                     </div>
-                    <input ref={inputRef} value={goal} onChange={e => setGoal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLaunch()} className="flex-1 bg-transparent border-none outline-none text-base md:text-xl text-white placeholder:text-slate-800 px-6 py-3.5 font-medium" placeholder={`Engage AuraCore Elite ${version}...`} />
+                    <input ref={inputRef} value={goal} onChange={e => setGoal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLaunch()} className="flex-1 bg-transparent border-none outline-none text-base md:text-lg text-white placeholder:text-slate-700 px-4 md:px-8 py-3 md:py-4 font-medium tracking-tight" placeholder={isSidebarOpen ? "Initiate telemetry uplink..." : `System ready. Engage AuraCore ${version}...`} />
                     {status.status !== 'idle' && status.status !== 'completed' && status.status !== 'error' ? (
-                        <button onClick={stopMission} className="p-3.5 bg-red-600/20 hover:bg-red-600/40 text-red-500 border border-red-500/30 rounded-[24px] transition-all shadow-2xl active:scale-95 mr-2">
-                            <Square size={20} fill="currentColor" />
+                        <button onClick={stopMission} className="p-2.5 md:p-4 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/20 rounded-xl md:rounded-2xl transition-all active:scale-95 mr-3">
+                            <Square className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" />
                         </button>
                     ) : null}
-                    <button onClick={() => { handleLaunch(); setAttachedImage(null); }} disabled={!goal || (status.status !== 'idle' && status.status !== 'completed' && status.status !== 'error')} className="p-3.5 bg-cyan-600 hover:bg-cyan-500 disabled:bg-white/5 text-white rounded-[24px] transition-all shadow-2xl shadow-cyan-600/30 active:scale-95">
-                        {status.status === 'building' ? <Loader2 size={24} className="animate-spin" /> : <Send size={24} />}
+                    <button onClick={() => { handleLaunch(); setAttachedImage(null); }} disabled={!goal || (status.status !== 'idle' && status.status !== 'completed' && status.status !== 'error')} className="p-2.5 md:p-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-white/5 disabled:text-slate-800 text-white rounded-xl md:rounded-2xl transition-all shadow-xl shadow-cyan-600/20 active:scale-95 btn-premium">
+                        {status.status === 'building' ? <Loader2 size={22} className="animate-spin" /> : <Send size={22} />}
                     </button>
                 </div>
-                </div>
+            </div>
+        </div>
 
-        {/* Aura Command Palette */}
         <AnimatePresence>
             {isPaletteOpen && (
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
                     <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-xl bg-[#0d0d12]/95 border border-white/10 rounded-[32px] shadow-[0_50px_100px_rgba(0,0,0,1)] overflow-hidden">
                         <div className="p-6 border-b border-white/5 flex items-center gap-4">
                             <Command size={20} className="text-cyan-500" />
-                            <input autoFocus placeholder="Execute global command..." className="bg-transparent border-none outline-none text-xl text-white w-full font-medium" />
+                            <input 
+                                autoFocus 
+                                placeholder="Execute command or enter Neural Key..." 
+                                className="bg-transparent border-none outline-none text-xl text-white w-full font-medium" 
+                                onKeyDown={async (e) => {
+                                    if (e.key === 'Enter') {
+                                        const val = (e.target as HTMLInputElement).value;
+                                        if (val.startsWith('AURA-')) {
+                                            const res = await fetch("http://localhost:8000/activate", {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({ license: JSON.stringify({ owner: "ENTERPRISE_CLIENT", expiry: "2026-12-31", key: val }) })
+                                            });
+                                            const data = await res.json();
+                                            setLicense(data);
+                                            if (data.valid) {
+                                                addNotification("NEURAL_KEY_ACCEPTED");
+                                                setIsPaletteOpen(false);
+                                            } else {
+                                                addNotification("INVALID_KEY_SEQUENCE");
+                                            }
+                                        }
+                                    }
+                                }}
+                            />
                         </div>
                         <div className="p-4 space-y-1">
                             <button onClick={() => { setVersion("v5.13-Flux"); setIsPaletteOpen(false); }} className="w-full text-left p-4 rounded-2xl hover:bg-white/5 flex items-center justify-between group"><div className="flex items-center gap-4"><div className="p-2 bg-white/5 rounded-xl group-hover:text-cyan-400"><Cpu size={18} /></div><span className="font-bold">Engage Flux Engine</span></div><span className="text-[10px] text-slate-500">v5.13</span></button>
@@ -562,7 +617,6 @@ export default function Home() {
             )}
         </AnimatePresence>
 
-        {/* Aesthetic Notification Layer */}
         <div className="fixed top-8 right-8 z-[2000] flex flex-col gap-3">
             <AnimatePresence>
                 {notifications.map(n => (
@@ -573,9 +627,39 @@ export default function Home() {
                 ))}
             </AnimatePresence>
         </div>
+
+        {/* License Lock Overlay */}
+        <AnimatePresence>
+            {!license.valid && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="fixed inset-0 z-[5000] bg-[#020617]/95 backdrop-blur-2xl flex items-center justify-center p-6 text-center"
+                >
+                    <div className="max-w-md w-full space-y-8">
+                        <div className="relative inline-block">
+                             <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full" />
+                             <Shield size={80} className="text-red-500 relative z-10 mx-auto pulse-glow" />
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic">Access Restricted</h2>
+                            <p className="text-slate-500 font-mono text-xs tracking-widest uppercase">{license.message}</p>
+                        </div>
+                        <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                            <p className="text-sm text-slate-300">This instance of AuraCore Elite requires an active commercial license or trial extension.</p>
+                            <div className="flex flex-col gap-3">
+                                <button onClick={() => window.open('mailto:developer@auracore.ai')} className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all shadow-xl shadow-cyan-600/20 active:scale-95">REQUEST_NEW_KEY</button>
+                                <button onClick={() => setIsPaletteOpen(true)} className="w-full py-4 bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all">ENTER_EXISTING_KEY</button>
+                            </div>
+                        </div>
+                        <div className="text-[10px] font-black text-slate-700 tracking-[0.3em] uppercase">Status: {license.status} // ID: {license.owner || 'UNKNOWN'}</div>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
 
-export default Home;
+

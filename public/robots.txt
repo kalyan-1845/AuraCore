@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /
+Disallow: /_next/
+Disallow: /static/
+Disallow: /api/
+
+Sitemap: https://auracore.ai/sitemap.xml
