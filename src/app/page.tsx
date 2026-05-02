@@ -40,6 +40,11 @@ export default function Home() {
   const [thinkLoop, setThinkLoop] = useState<ThinkLoopData | null>(null);
   const [activeModel, setActiveModel] = useState<string>("llama3");
   const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [license, setLicense] = useState({ valid: true, message: "CHECKING...", status: "PENDING", owner: "", expiry: "", days_left: 0 });
+  const [licOwner, setLicOwner] = useState("");
+  const [licKey, setLicKey] = useState("");
+  const [licExpiry, setLicExpiry] = useState("");
+  const [licError, setLicError] = useState("");
 
   
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +53,16 @@ export default function Home() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => { 
+    const checkLicense = async () => {
+        try {
+            const res = await fetch("http://localhost:8000/license-status");
+            const data = await res.json();
+            setLicense(data);
+        } catch (e) {
+            setLicense({ valid: true, message: "BACKEND_STARTING", status: "DEV", owner: "", expiry: "", days_left: 0 });
+        }
+    };
+    checkLicense();
     fetchHistory();
     syncNeuralMemory();
     fetchModels();
@@ -697,6 +712,67 @@ export default function Home() {
             </AnimatePresence>
         </div>
 
+        {/* License Activation Overlay — only shows for customer/production builds */}
+        <AnimatePresence>
+            {!license.valid && license.status !== "DEV" && license.status !== "PENDING" && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="fixed inset-0 z-[5000] bg-[#020617]/95 backdrop-blur-2xl flex items-center justify-center p-6 text-center"
+                >
+                    <div className="max-w-md w-full space-y-6">
+                        <div className="relative inline-block">
+                             <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full" />
+                             <Shield size={64} className="text-cyan-500 relative z-10 mx-auto" />
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Activate AuraCore</h2>
+                            <p className="text-slate-500 font-mono text-xs tracking-widest uppercase">{license.message}</p>
+                        </div>
+                        <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4 text-left">
+                            <div>
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Your Name</label>
+                                <input value={licOwner} onChange={e => setLicOwner(e.target.value)} className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-cyan-500/50" placeholder="Customer name" />
+                            </div>
+                            <div>
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 block">License Key</label>
+                                <input value={licKey} onChange={e => setLicKey(e.target.value)} className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm font-mono outline-none focus:border-cyan-500/50" placeholder="AURA-XXXX-XXXX-XXXX-XXXX" />
+                            </div>
+                            <div>
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Expiry Date</label>
+                                <input value={licExpiry} onChange={e => setLicExpiry(e.target.value)} className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-cyan-500/50" placeholder="2026-12-31" />
+                            </div>
+                            {licError && <p className="text-red-400 text-xs font-bold">{licError}</p>}
+                            <button 
+                                onClick={async () => {
+                                    setLicError("");
+                                    try {
+                                        const res = await fetch("http://localhost:8000/activate", {
+                                            method: "POST",
+                                            headers: {"Content-Type": "application/json"},
+                                            body: JSON.stringify({ owner: licOwner, key: licKey, expiry: licExpiry })
+                                        });
+                                        const data = await res.json();
+                                        if (data.valid) {
+                                            setLicense(data);
+                                            addNotification("LICENSE_ACTIVATED");
+                                        } else {
+                                            setLicError(data.message || "Invalid license key");
+                                        }
+                                    } catch (e) {
+                                        setLicError("Connection failed. Is the backend running?");
+                                    }
+                                }}
+                                disabled={!licOwner || !licKey || !licExpiry}
+                                className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-white/5 disabled:text-slate-700 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all shadow-xl shadow-cyan-600/20 active:scale-95"
+                            >
+                                ACTIVATE_LICENSE
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
 
       </div>
     </div>
