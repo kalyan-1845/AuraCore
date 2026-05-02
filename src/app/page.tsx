@@ -11,13 +11,14 @@ import {
   Loader2, CheckCircle, Copy, Cpu, Activity as LucideActivity, Terminal, 
   Brain, Minimize2, Maximize2, Wifi, Command, Trash2, 
   PlusCircle, Share2, Menu, X, Workflow, ChevronDown, Sparkles, Database, Search, 
-  Camera, Eye, Layers, Square
+  Camera, Eye, Layers, Square, RotateCcw, Zap, Globe, Building2
 } from "lucide-react";
 
 interface MissionData { id: number; goal: string; result: string; timestamp: string; }
-interface AgentStatus { status: "idle" | "initializing" | "planning" | "researching" | "building" | "completed" | "error"; message: string; result?: string; progress: number; }
+interface AgentStatus { status: "idle" | "initializing" | "planning" | "researching" | "building" | "thinking" | "completed" | "error"; message: string; result?: string; progress: number; }
 type AuraVersion = "v5.13-Flux" | "v5.2-Analyst" | "v5.3-Coder";
 interface TraceShard { source: string; content: string; }
+interface ThinkLoopData { iteration: number; max_iterations: number; phase: string; score?: number; verdict?: string; weaknesses?: string[]; }
 
 export default function Home() {
   const [goal, setGoal] = useState("");
@@ -36,7 +37,9 @@ export default function Home() {
   const [traceShards, setTraceShards] = useState<TraceShard[]>([]);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState<{id: number, msg: string}[]>([]);
-  const [license, setLicense] = useState({ valid: true, message: "PROVISIONING...", status: "PENDING" });
+  const [thinkLoop, setThinkLoop] = useState<ThinkLoopData | null>(null);
+  const [activeModel, setActiveModel] = useState<string>("llama3");
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
 
   
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,19 +48,9 @@ export default function Home() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => { 
-    const checkLicense = async () => {
-        try {
-            const res = await fetch("http://localhost:8000/license-status");
-            const data = await res.json();
-            setLicense(data);
-        } catch (e) {
-            setLicense({ valid: false, message: "BACKEND_UNREACHABLE", status: "OFFLINE" });
-        }
-    };
-    
-    checkLicense();
     fetchHistory();
     syncNeuralMemory();
+    fetchModels();
 
     setTelemetry(prev => ({ 
         ...prev,
@@ -90,15 +83,7 @@ export default function Home() {
       const shardsCount = (kText.match(/SOURCE:/g) || []).length;
       setTelemetry(prev => ({ ...prev, shards: shardsCount }));
 
-      list.slice(0, 50).forEach(async (m: any) => {
-        if (!historyCache[m.id]) {
-            try {
-                const detailRes = await fetch(`http://localhost:8000/history?id=${m.id}`);
-                const detailData = await detailRes.json();
-                setHistoryCache(prev => ({ ...prev, [m.id]: detailData.result }));
-            } catch (e) {}
-        }
-      });
+      // History details are lazy-loaded when clicked (no bulk fetch)
     } catch (e) {
       console.error("HISTORY_WARMUP_FAILED", e);
     }
@@ -115,6 +100,17 @@ export default function Home() {
         addNotification("SYNC_FAILURE");
     }
     setIsSyncing(false);
+  };
+
+  const fetchModels = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/models");
+      const data = await res.json();
+      setAvailableModels(data.models || []);
+      if (data.models?.length > 0) setActiveModel(data.models[0]);
+    } catch (e) {
+      console.error("MODEL_DISCOVERY_FAILED", e);
+    }
   };
 
   const addNotification = (msg: string) => {
@@ -140,6 +136,7 @@ export default function Home() {
     setIsTraceOpen(false);
     setAttachedImage(null);
     setStatus({ status: "initializing", message: "UPLINKING...", result: "", progress: 5 });
+    setThinkLoop(null);
 
     if (abortControllerRef.current) abortControllerRef.current.abort();
     abortControllerRef.current = new AbortController();
@@ -171,14 +168,24 @@ export default function Home() {
             try {
                 const data = JSON.parse(line.replace("data: ", ""));
                 if (data.status === "completed") {
+                    setThinkLoop(null);
                     setStatus({ status: "completed", message: "COMPLETED", result: data.result, progress: 100 });
                     addNotification("SYNTHESIS_COMPLETE");
                     fetchHistory();
                     abortControllerRef.current = null;
                 } else if (data.status === "building") {
-                    setStatus({ status: "building", message: "SYNTHESIZING", result: data.full_text, progress: 60 });
+                    const msg = data.message || "SYNTHESIZING";
+                    const prog = data.progress || 60;
+                    setStatus({ status: "building", message: msg, result: data.full_text, progress: prog });
                 } else if (data.status === "trace") {
                     setTraceShards(data.shards);
+                } else if (data.status === "thinking") {
+                    const td = data.think_data;
+                    setThinkLoop(td);
+                    setStatus(prev => ({ ...prev, status: "thinking", message: `DEEP_THINK (${td.iteration}/${td.max_iterations})`, progress: 60 + (td.iteration * 10) }));
+                    if (td.phase === "EVALUATED" && td.score) {
+                        addNotification(`CRITIC_SCORE: ${td.score}/10`);
+                    }
                 }
             } catch (err) {}
           }
@@ -387,7 +394,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2 md:gap-4">
                  <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-1.5 rounded-full bg-white/5 border border-white/5 shadow-2xl">
-                    <div className={`w-2 md:w-2.5 h-2 md:h-2.5 rounded-full shadow-[0_0_15px] transition-all duration-700 ${status.status === 'idle' || status.status === 'completed' ? 'bg-cyan-500 shadow-cyan-500/50' : status.status === 'error' ? 'bg-red-500 shadow-red-500/80 animate-pulse' : status.status === 'building' ? 'bg-white shadow-white/80 animate-ping' : 'bg-orange-500 shadow-orange-500/80 animate-bounce' }`}></div>
+                    <div className={`w-2 md:w-2.5 h-2 md:h-2.5 rounded-full shadow-[0_0_15px] transition-all duration-700 ${status.status === 'idle' || status.status === 'completed' ? 'bg-cyan-500 shadow-cyan-500/50' : status.status === 'error' ? 'bg-red-500 shadow-red-500/80 animate-pulse' : status.status === 'thinking' ? 'bg-purple-500 shadow-purple-500/80 animate-pulse' : status.status === 'building' ? 'bg-white shadow-white/80 animate-ping' : 'bg-orange-500 shadow-orange-500/80 animate-bounce' }`}></div>
                     <span className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-[0.2em] md:tracking-[0.3em]">{status.message}</span>
                  </div>
                  <button onClick={syncNeuralMemory} className={`p-2 transition-all ${isOnline ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]' : 'text-slate-600 hover:text-white'} ${isSyncing ? 'animate-spin' : ''}`}><Wifi size={18}/></button>
@@ -470,6 +477,85 @@ export default function Home() {
                                             </motion.div>
                                         )}</AnimatePresence>
                                     </div>
+                                )}
+                                {/* Deep Think Loop Visualization */}
+                                {thinkLoop && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: -10 }} 
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mb-8 overflow-hidden rounded-2xl think-loop-active bg-black/60"
+                                    >
+                                        <div className="p-5 space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="think-orbit-ring">
+                                                        <RotateCcw size={16} className="text-purple-400" />
+                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-purple-300">
+                                                        Deep Think Loop — Iteration {thinkLoop.iteration}/{thinkLoop.max_iterations}
+                                                    </span>
+                                                </div>
+                                                <div className="think-iteration-badge px-3 py-1 rounded-full">
+                                                    <span className="text-[9px] font-black text-purple-300 uppercase tracking-widest">
+                                                        {thinkLoop.phase}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {/* Iteration Progress Dots */}
+                                            <div className="flex items-center gap-2">
+                                                {Array.from({ length: thinkLoop.max_iterations }).map((_, i) => (
+                                                    <div key={i} className="flex items-center gap-2">
+                                                        <div className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                                                            i < thinkLoop.iteration 
+                                                                ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]' 
+                                                                : i === thinkLoop.iteration - 1 && thinkLoop.phase === 'REFINING'
+                                                                    ? 'bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]'
+                                                                    : 'bg-white/10'
+                                                        }`} />
+                                                        {i < thinkLoop.max_iterations - 1 && (
+                                                            <div className={`w-8 h-0.5 ${i < thinkLoop.iteration - 1 ? 'bg-purple-500/50' : 'bg-white/5'}`} />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {/* Critic Score */}
+                                            {thinkLoop.score !== undefined && (
+                                                <div className="flex items-center gap-4 p-3 rounded-xl bg-white/5">
+                                                    <Zap size={14} className={thinkLoop.score >= 7 ? 'text-emerald-400' : 'text-orange-400'} />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Quality Score</span>
+                                                            <span className={`text-[11px] font-black ${thinkLoop.score >= 7 ? 'text-emerald-400' : 'text-orange-400'}`}>
+                                                                {thinkLoop.score}/10
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                            <motion.div 
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${thinkLoop.score * 10}%` }}
+                                                                className={`h-full rounded-full ${thinkLoop.score >= 7 ? 'bg-emerald-500' : 'bg-orange-500'}`}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <span className={`text-[9px] font-black px-2 py-1 rounded-full ${
+                                                        thinkLoop.verdict === 'ACCEPT' 
+                                                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                                            : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+                                                    }`}>
+                                                        {thinkLoop.verdict || 'EVALUATING'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {/* Weaknesses Found */}
+                                            {thinkLoop.weaknesses && thinkLoop.weaknesses.length > 0 && (
+                                                <div className="space-y-1 pl-4 border-l-2 border-orange-500/30">
+                                                    {thinkLoop.weaknesses.slice(0, 3).map((w, i) => (
+                                                        <div key={i} className="text-[9px] text-orange-300/70 font-mono">→ {w}</div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
                                 )}
                                 <div className="markdown-content">
                                     <ReactMarkdown 
@@ -568,7 +654,7 @@ export default function Home() {
                         </button>
                     ) : null}
                     <button onClick={() => { handleLaunch(); setAttachedImage(null); }} disabled={!goal || (status.status !== 'idle' && status.status !== 'completed' && status.status !== 'error')} className="p-2.5 md:p-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-white/5 disabled:text-slate-800 text-white rounded-xl md:rounded-2xl transition-all shadow-xl shadow-cyan-600/20 active:scale-95 btn-premium">
-                        {status.status === 'building' ? <Loader2 size={22} className="animate-spin" /> : <Send size={22} />}
+                        {status.status === 'building' ? <Loader2 size={22} className="animate-spin" /> : status.status === 'thinking' ? <RotateCcw size={22} className="animate-spin text-purple-400" /> : <Send size={22} />}
                     </button>
                 </div>
             </div>
@@ -582,27 +668,10 @@ export default function Home() {
                             <Command size={20} className="text-cyan-500" />
                             <input 
                                 autoFocus 
-                                placeholder="Execute command or enter Neural Key..." 
+                                placeholder="Search commands..." 
                                 className="bg-transparent border-none outline-none text-xl text-white w-full font-medium" 
-                                onKeyDown={async (e) => {
-                                    if (e.key === 'Enter') {
-                                        const val = (e.target as HTMLInputElement).value;
-                                        if (val.startsWith('AURA-')) {
-                                            const res = await fetch("http://localhost:8000/activate", {
-                                                method: "POST",
-                                                headers: { "Content-Type": "application/json" },
-                                                body: JSON.stringify({ license: JSON.stringify({ owner: "ENTERPRISE_CLIENT", expiry: "2026-12-31", key: val }) })
-                                            });
-                                            const data = await res.json();
-                                            setLicense(data);
-                                            if (data.valid) {
-                                                addNotification("NEURAL_KEY_ACCEPTED");
-                                                setIsPaletteOpen(false);
-                                            } else {
-                                                addNotification("INVALID_KEY_SEQUENCE");
-                                            }
-                                        }
-                                    }
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Escape') setIsPaletteOpen(false);
                                 }}
                             />
                         </div>
@@ -628,35 +697,7 @@ export default function Home() {
             </AnimatePresence>
         </div>
 
-        {/* License Lock Overlay */}
-        <AnimatePresence>
-            {!license.valid && (
-                <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="fixed inset-0 z-[5000] bg-[#020617]/95 backdrop-blur-2xl flex items-center justify-center p-6 text-center"
-                >
-                    <div className="max-w-md w-full space-y-8">
-                        <div className="relative inline-block">
-                             <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full" />
-                             <Shield size={80} className="text-red-500 relative z-10 mx-auto pulse-glow" />
-                        </div>
-                        <div className="space-y-2">
-                            <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic">Access Restricted</h2>
-                            <p className="text-slate-500 font-mono text-xs tracking-widest uppercase">{license.message}</p>
-                        </div>
-                        <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
-                            <p className="text-sm text-slate-300">This instance of AuraCore Elite requires an active commercial license or trial extension.</p>
-                            <div className="flex flex-col gap-3">
-                                <button onClick={() => window.open('mailto:developer@auracore.ai')} className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all shadow-xl shadow-cyan-600/20 active:scale-95">REQUEST_NEW_KEY</button>
-                                <button onClick={() => setIsPaletteOpen(true)} className="w-full py-4 bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10 rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all">ENTER_EXISTING_KEY</button>
-                            </div>
-                        </div>
-                        <div className="text-[10px] font-black text-slate-700 tracking-[0.3em] uppercase">Status: {license.status} // ID: {license.owner || 'UNKNOWN'}</div>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+
       </div>
     </div>
   );

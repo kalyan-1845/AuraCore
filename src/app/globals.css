@@ -134,3 +134,67 @@ body {
   50% { opacity: 0.7; }
 }
 
+/* Deep Think Loop Visualization */
+@keyframes think-orbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes think-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(168, 85, 247, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.3); }
+}
+
+@keyframes refine-glow {
+  0%, 100% { border-color: rgba(168, 85, 247, 0.2); }
+  50% { border-color: rgba(168, 85, 247, 0.6); }
+}
+
+.think-loop-active {
+  animation: think-pulse 1.5s ease-in-out infinite;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 1rem;
+}
+
+.think-orbit-ring {
+  animation: think-orbit 3s linear infinite;
+}
+
+.think-iteration-badge {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(6, 182, 212, 0.15));
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  backdrop-filter: blur(12px);
+}
+
+.refine-pulse {
+  animation: refine-glow 2s ease-in-out infinite;
+}
+
+/* Company Intel Panel */
+.company-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.4));
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+}
+
+.company-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.1);
+}
+
+/* Score Ring */
+@keyframes score-fill {
+  from { stroke-dashoffset: 100; }
+}
+
+.score-ring {
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+/* Web source badge */
+.web-source-badge {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1));
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
