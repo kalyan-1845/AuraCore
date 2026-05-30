@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "auracore-elite"
+version = "5.13.0"
+description = "AuraCore Elite - Multi-Agent AI Command Center with Deep Think Loop"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "requests",
+    "python-dotenv",
+    "pydantic",
+    "duckduckgo-search",
+    "beautifulsoup4",
+    "python-multipart"
+]

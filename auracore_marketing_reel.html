@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraCore Elite — The Marketing Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap');
+
+        :root {
+            --bg: #050505;
+            --primary: #fbbf24; /* Luxury Gold */
+            --accent: #f43f5e; /* Vibrant Rose */
+            --text-main: #ffffff;
+            --text-muted: #a3a3a3;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(251, 191, 36, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(244, 63, 94, 0.05), transparent 25%);
+        }
+
+        /* --- LUXURY UI & VISUALS --- */
+        .brand-header {
+            position: fixed;
+            top: 2rem; left: 3rem; right: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.5rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-dot {
+            width: 12px; height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--primary);
+            animation: pulse-slow 3s infinite;
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        /* --- BACKGROUND ANIMATIONS (DATA STREAMS) --- */
+        .data-grid {
+            position: fixed;
+            inset: 0;
+            background-size: 60px 60px;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            z-index: 0;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: gridMove 20s linear infinite;
+        }
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(60px) translateZ(-200px); }
+        }
+
+        /* --- SMOOTH 2D SCENES --- */
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .scene {
+            position: absolute;
+            width: 80%;
+            max-width: 1200px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+            transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .scene.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .scene.exit {
+            opacity: 0;
+            transform: translateY(-40px) scale(1.05);
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: var(--primary);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        .headline {
+            font-size: 5.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 2rem;
+        }
+
+        .gold-text {
+            background: linear-gradient(90deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .desc {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* --- PREMIUM CINEMATIC CAPTIONS --- */
+        .caption-layer {
+            position: fixed;
+            bottom: 6rem;
+            left: 0; right: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #subtitle {
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem 3rem;
+            border-radius: 8px;
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: #fff;
+            letter-spacing: 0.02em;
+            text-align: center;
+            max-width: 80vw;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.9);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        #subtitle.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- PROGRESS --- */
+        .progress-bar {
+            position: fixed;
+            bottom: 0; left: 0;
+            height: 6px;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 20px var(--primary);
+            z-index: 2000;
+        }
+
+        /* --- START BUTTON --- */
+        #startScreen {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 1s;
+        }
+
+        .btn-launch {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 1.5rem 4rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            border-radius: 100px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
+            transition: transform 0.2s;
+        }
+        .btn-launch:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+<div id="startScreen">
+    <div style="font-size:0.8rem; color:var(--text-muted); letter-spacing:0.4em; margin-bottom:3rem;">AURACORE ELITE v5.5</div>
+    <button class="btn-launch" id="btnLaunch">Initiate Showcase</button>
+</div>
+
+<div class="data-grid"></div>
+
+<div class="brand-header">
+    <div class="logo"><div class="logo-dot"></div> AURACORE</div>
+    <div style="color:var(--text-muted); font-weight:700; letter-spacing:0.2em;">V5.5 ELITE</div>
+</div>
+
+<div class="scene-container">
+    <!-- SCENE 1 -->
+    <div class="scene" id="s1">
+        <div class="tagline">The Evolution</div>
+        <div class="headline">94% Neural <br><span class="gold-text">Logic Synthesis</span></div>
+        <div class="desc">We don't do first drafts. AuraCore orchestrates a recursive, multi-agent adversarial loop to crush lazy logic.</div>
+    </div>
+
+    <!-- SCENE 2 -->
+    <div class="scene" id="s2">
+        <div class="tagline" style="color:var(--accent);">Zero Compromise</div>
+        <div class="headline">Localized <br><span class="gold-text" style="background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text;">Red-Team Defense</span></div>
+        <div class="desc">Never send your proprietary code to the cloud again. AuraCore acts as a native penetration tester right on your hardware.</div>
+    </div>
+
+    <!-- SCENE 3 -->
+    <div class="scene" id="s3">
+        <div class="tagline">The Mastermind</div>
+        <div class="headline">Triple-Engine <br><span class="gold-text">Orchestration</span></div>
+        <div class="desc">Llama 3 for Strategy. Mistral for Data. CodeLlama for Architecture. Automatically routed to the ultimate specialist.</div>
+    </div>
+
+    <!-- SCENE 4 -->
+    <div class="scene" id="s4">
+        <div class="headline" style="font-size: 7rem;">THE FUTURE <br>IS <span class="gold-text">LOCAL.</span></div>
+    </div>
+</div>
+
+<div class="caption-layer"><div id="subtitle"></div></div>
+<div class="progress-bar" id="progress"></div>
+
+<script>
+    /* --- STABILIZED AUDIO ENGINE --- */
+    let availableVoices = [];
+    
+    // Force load voices immediately
+    function loadVoices() {
+        availableVoices = window.speechSynthesis.getVoices();
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices(); // Initial trigger
+
+    function getBestVoice() {
+        if(availableVoices.length === 0) loadVoices();
+        
+        // AGGRESSIVE TARGETING: Guarantee a Female Voice
+        const femaleVoice = 
+               availableVoices.find(v => v.name.includes('Jenny')) ||
+               availableVoices.find(v => v.name.includes('Aria')) ||
+               availableVoices.find(v => v.name.includes('Jane')) ||
+               availableVoices.find(v => v.name.includes('Michelle')) ||
+               availableVoices.find(v => v.name.includes('Sonia')) ||
+               availableVoices.find(v => v.name.includes('Hazel')) ||
+               availableVoices.find(v => v.name.includes('Susan')) ||
+               availableVoices.find(v => v.name.includes('Zira')) || 
+               availableVoices.find(v => v.name.includes('Female')) ||
+               availableVoices.find(v => v.name.includes('female'));
+
+        // If no explicit female is found, explicitly avoid known male defaults (David, Mark)
+        return femaleVoice || availableVoices.find(v => !v.name.includes('David') && !v.name.includes('Mark') && !v.name.includes('Male')) || availableVoices[0];
+    }
+
+    function speakText(text) {
+        return new Promise((resolve) => {
+            if (!window.speechSynthesis) { resolve(); return; }
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = getBestVoice();
+            
+            // Normalized Voice Settings: Prevents the engine from stuttering, breaking, or stopping unexpectedly.
+            utterance.pitch = 1.05; // Slightly elevated for energy, but perfectly safe
+            utterance.rate = 1.0; 
+            
+            utterance.onend = () => { resolve(); };
+            utterance.onerror = (e) => { console.error("TTS Error:", e); resolve(); };
+            window.speechSynthesis.speak(utterance);
+        });
+    }
+
+    /* --- CINEMATIC ENGINE --- */
+    const subEl = document.getElementById('subtitle');
+    const progress = document.getElementById('progress');
+
+    async function showSubtitle(text) {
+        subEl.classList.remove('visible');
+        await new Promise(r => setTimeout(r, 250));
+        subEl.textContent = text;
+        subEl.classList.add('visible');
+    }
+
+    async function playScene(sceneId, progPercent, lines) {
+        const oldScene = document.querySelector('.scene.active');
+        if (oldScene) {
+            oldScene.classList.remove('active');
+            oldScene.classList.add('exit');
+            await new Promise(r => setTimeout(r, 800)); // wait for exit animation
+            oldScene.classList.remove('exit');
+        }
+
+        progress.style.width = progPercent + '%';
+        const newScene = document.getElementById(sceneId);
+        newScene.classList.add('active');
+        await new Promise(r => setTimeout(r, 600));
+
+        for (let i = 0; i < lines.length; i++) {
+            showSubtitle(lines[i].sub);
+            await speakText(lines[i].speak);
+            await new Promise(r => setTimeout(r, 400));
+        }
+        
+        subEl.classList.remove('visible');
+        await new Promise(r => setTimeout(r, 400));
+    }
+
+    async function startShowcase() {
+        document.getElementById('startScreen').style.opacity = '0';
+        setTimeout(() => document.getElementById('startScreen').style.display = 'none', 1000);
+        await new Promise(r => setTimeout(r, 1000));
+
+        await playScene('s1', 25, [
+            { sub: "Most AI models give you a first draft.", speak: "Most A I models, just give you a first draft." },
+            { sub: "At AuraCore Elite... we demand a third.", speak: "But at Aura Core Elite, we demand a third." },
+            { sub: "This is the Neural Debate.", speak: "This is the Neural Debate." },
+            { sub: "A recursive loop where the skeptic agent rejects lazy logic.", speak: "It is a recursive loop, where the skeptic agent totally rejects lazy logic." }
+        ]);
+
+        await playScene('s2', 50, [
+            { sub: "Security is not a feature. It is the mission.", speak: "Security is not a feature. It is the absolute mission." },
+            { sub: "Switch to Red Team Mode.", speak: "Just switch to Red Team Mode." },
+            { sub: "High-intensity security auditing that never touches the cloud.", speak: "High intensity security auditing, that never, ever touches the cloud." }
+        ]);
+
+        // EXPANDED SCENE 3 WITH IRRESISTIBLE MARKETING STRATEGY
+        await playScene('s3', 75, [
+            { sub: "No single AI model is perfect at everything.", speak: "Let us be honest. No single A I model is perfect at everything." },
+            { sub: "AuraCore introduces dynamic Triple-Engine Fusion.", speak: "That is exactly why you are going to love Aura Core's dynamic Triple Engine Fusion." },
+            { sub: "It's an orchestration layer built for ultimate performance.", speak: "It is a flawless orchestration layer, built for ultimate performance." },
+            { sub: "Llama 3 handles complex strategy.", speak: "Llama Three, effortlessly handles your complex strategy." },
+            { sub: "Mistral rapidly synthesizes heavy data.", speak: "Mistral synthesizes your heavy data in absolute seconds." },
+            { sub: "And CodeLlama architects your software natively.", speak: "And Code Llama, beautifully architects your software natively." },
+            { sub: "We drastically reduce latency and compute costs.", speak: "We crush your latency and compute costs, while maximizing your intelligence." },
+            { sub: "Total orchestration. This is the new standard.", speak: "Total orchestration. This is the absolute new standard." }
+        ]);
+
+        await playScene('s4', 100, [
+            { sub: "Stop renting your intelligence.", speak: "Stop renting your intelligence from the cloud." },
+            { sub: "Take back your ownership today.", speak: "Take back your ownership today." }
+        ]);
+        
+        await new Promise(r => setTimeout(r, 3000));
+        location.reload();
+    }
+
+    document.getElementById('btnLaunch').addEventListener('click', () => {
+        const t = new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(t);
+        startShowcase();
+    });
+</script>
+</body>
+</html>

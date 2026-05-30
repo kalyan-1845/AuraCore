@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuraCore Elite - Technical Briefing</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+    :root {
+        --primary: #0a0a1a;
+        --accent: #22d3ee;
+        --text: #334155;
+        --heading: #0f172a;
+        --border: #e2e8f0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #fff; color: var(--text); line-height: 1.6; }
+    
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 25mm; position: relative; overflow: hidden; }
+    
+    .cover-image { width: calc(100% + 50mm); margin: -25mm -25mm 20mm -25mm; height: 120mm; overflow: hidden; position: relative; }
+    .cover-image img { width: 100%; height: 100%; object-fit: cover; }
+    .cover-overlay { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(10,10,26,1) 0%, rgba(10,10,26,0.4) 50%, transparent 100%); }
+    .cover-text { position: absolute; bottom: 30px; left: 25mm; color: #fff; }
+    .cover-text h1 { font-size: 3.5rem; font-weight: 800; letter-spacing: -0.04em; line-height: 0.9; }
+    .cover-text p { font-size: 1.2rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 10px; }
+
+    .content-section { margin-bottom: 40px; }
+    h2 { font-size: 1.8rem; font-weight: 700; color: var(--heading); margin-bottom: 20px; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 5px; }
+    h3 { font-size: 1.2rem; font-weight: 700; color: var(--heading); margin: 20px 0 10px 0; }
+    p { margin-bottom: 15px; text-align: justify; }
+    
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+    .feature-card { border: 1px solid var(--border); padding: 20px; border-radius: 12px; background: #f8fafc; }
+    .feature-card h4 { color: var(--heading); font-size: 0.95rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .feature-card p { font-size: 0.85rem; margin: 0; }
+
+    .tech-specs { font-family: 'JetBrains Mono', monospace; background: var(--primary); color: #fff; padding: 20px; border-radius: 12px; margin: 30px 0; font-size: 0.8rem; }
+    .tech-specs span { color: var(--accent); }
+
+    .footer { position: absolute; bottom: 20px; left: 25mm; right: 25mm; border-top: 1px solid var(--border); padding-top: 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; }
+
+    @media print {
+        body { background: none; }
+        .page { margin: 0; box-shadow: none; width: 100%; height: auto; }
+    }
+</style>
+</head>
+<body>
+    <div class="page">
+        <div class="cover-image">
+            <img src="auracore_tech_brief_cover_1778743829225.png" alt="AuraCore Cover">
+            <div class="cover-overlay"></div>
+            <div class="cover-text">
+                <p>CONFIDENTIAL // CTO BRIEFING</p>
+                <h1>AURACORE<br>ELITE</h1>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>The Architecture of Sovereignty</h2>
+            <p>
+                AuraCore Elite is a proprietary <strong>Multi-Agent Orchestration Engine</strong> designed for enterprise-grade adversarial reasoning. Unlike traditional cloud-based LLM implementations, AuraCore executes 100% of its inference on local hardware, ensuring absolute data sovereignty and zero telemetry leakage.
+            </p>
+        </div>
+
+        <div class="content-section">
+            <h3>Neural Debate Orchestration</h3>
+            <p>
+                The core innovation of AuraCore is its <strong>Adversarial Neural Debate</strong> loop. Every mission is processed through a specialized 5-agent pipeline:
+            </p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>01. Intelligence Recon</h4>
+                    <p>Synchronizes local knowledge bases with real-time web-enhanced telemetry via asynchronous shards.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>02. Bilateral Debate</h4>
+                    <p>A dual-agent loop where a 'Skeptic' attacks reasoning vulnerabilities while a 'Security Architect' hardens the output.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>03. Model Specialization</h4>
+                    <p>Dynamic routing between Llama 3 (General), Mistral (Analysis), and CodeLlama (Architecture) based on task intent.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>04. Quality Thresholds</h4>
+                    <p>Recursive refinement iterations continue until a reasoning depth of 94% or higher is programmatically verified.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h3>Technical Specifications (v5.13)</h3>
+            <div class="tech-specs">
+                <div><span>[CORE]</span> FastAPI // Uvicorn // Python 3.12+</div>
+                <div><span>[INFERENCE]</span> Local Ollama Engine (8B - 70B Parameter Support)</div>
+                <div><span>[MEMORY]</span> SQLite WAL Mode // Neural Bridge Export (.aura)</div>
+                <div><span>[SECURITY]</span> Zero Cloud Telemetry // Local-Only VRAM Execution</div>
+                <div><span>[LATENCY]</span> Hardware-bound (Sub-second token generation on RTX 3090+)</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>© 2026 AuraCore Founders Protocol</span>
+            <span>TOP SECRET // EYES ONLY</span>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraCore Elite — Cinematic Masterpiece</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg: #030305;
+            --primary: #22d3ee;
+            --secondary: #8b5cf6;
+            --accent: #f43f5e;
+            --glass-bg: rgba(12, 12, 18, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glow-primary: rgba(34, 211, 238, 0.5);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Space Grotesk', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            perspective: 2000px;
+        }
+
+        /* --- 3D ENVIRONMENT --- */
+        #world {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            transform-style: preserve-3d;
+            transition: transform 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.15;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        .ambient-light {
+            position: fixed;
+            top: -20%; left: -10%;
+            width: 70vw; height: 70vw;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.08) 0%, transparent 60%);
+            z-index: 2; pointer-events: none;
+            transition: background 2s ease;
+        }
+
+        /* --- UI OVERLAY --- */
+        .overlay-ui {
+            position: relative;
+            z-index: 100;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem;
+            pointer-events: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-logo {
+            font-size: 1.1rem;
+            font-weight: 900;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .pulse-dot {
+            width: 8px; height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+
+        .sys-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.2em;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 4px;
+        }
+
+        /* --- HIGH-END CARDS --- */
+        .card-stage {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+        }
+
+        .master-card {
+            width: 1000px;
+            height: 600px;
+            background: linear-gradient(145deg, rgba(20, 20, 30, 0.9), rgba(10, 10, 15, 0.95));
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 4rem;
+            display: none;
+            flex-direction: row;
+            gap: 4rem;
+            opacity: 0;
+            transform-style: preserve-3d;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
+            will-change: transform, opacity;
+            transition: all 0.8s ease;
+        }
+
+        .master-card.active {
+            display: flex;
+            opacity: 1;
+            animation: cardEnter 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes cardEnter {
+            0% { transform: translateZ(-500px) rotateY(-15deg); opacity: 0; filter: blur(20px); }
+            100% { transform: translateZ(100px) rotateY(0); opacity: 1; filter: blur(0); }
+        }
+
+        /* Card Content Left */
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transform: translateZ(30px);
+        }
+
+        .tagline {
+            font-family: 'JetBrains Mono';
+            font-size: 0.75rem;
+            color: var(--primary);
+            letter-spacing: 0.3em;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .card-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-desc {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        /* Advanced CSS Visuals Right */
+        .card-visual {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateZ(50px);
+            transform-style: preserve-3d;
+        }
+
+        /* Visual 1: Neural Debate Rings */
+        .orbital-ring {
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            border: 2px dashed rgba(34, 211, 238, 0.3);
+            animation: spin 20s linear infinite;
+        }
+        .orbital-ring:nth-child(2) {
+            width: 200px; height: 200px;
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            animation: spinReverse 15s linear infinite;
+        }
+        .core-sphere {
+            width: 80px; height: 80px;
+            background: radial-gradient(circle, var(--primary), transparent);
+            border-radius: 50%;
+            box-shadow: 0 0 50px var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg) rotateX(60deg) rotateY(30deg); } }
+        @keyframes spinReverse { 100% { transform: rotate(-360deg) rotateX(-45deg) rotateY(-45deg); } }
+
+        /* Visual 2: Red Team Shield */
+        .shield-grid {
+            width: 250px; height: 250px;
+            background: 
+                linear-gradient(rgba(244, 63, 94, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(244, 63, 94, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            transform: rotateX(45deg) rotateZ(45deg);
+            position: relative;
+            box-shadow: 0 0 50px rgba(244, 63, 94, 0.1);
+        }
+        .scanner-line {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent);
+            animation: scanDown 3s ease-in-out infinite alternate;
+        }
+        @keyframes scanDown { 100% { top: 100%; } }
+
+        /* Visual 3: Model Fusion Pillars */
+        .pillar-container {
+            display: flex; gap: 1rem; align-items: flex-end; height: 200px;
+        }
+        .pillar {
+            width: 40px;
+            background: linear-gradient(to top, rgba(255,255,255,0.05), var(--c));
+            box-shadow: 0 0 30px var(--c);
+            border-radius: 4px 4px 0 0;
+            animation: pillarRise 2s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes pillarRise {
+            0% { height: 0; opacity: 0; }
+            100% { height: var(--h); opacity: 1; }
+        }
+
+        /* --- CINEMATIC CAPTIONS (NETFLIX STYLE) --- */
+        .caption-container {
+            position: fixed;
+            bottom: 8%;
+            left: 0; right: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #subtitle {
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(10px);
+            padding: 1.2rem 3rem;
+            border-radius: 8px;
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            letter-spacing: 0.02em;
+            text-align: center;
+            max-width: 80vw;
+            line-height: 1.4;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        #subtitle.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- PROGRESS BAR --- */
+        .progress-bar-wrap {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            z-index: 500;
+        }
+        #progress {
+            height: 100%;
+            width: 0%;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            transition: width 1s ease;
+        }
+
+        /* --- START OVERLAY --- */
+        .start-overlay {
+            position: fixed;
+            inset: 0;
+            background: #030305;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s;
+        }
+        .start-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        .btn-play {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 1.5rem 4rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 100px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-play:hover {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 40px rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div class="start-overlay" id="startScreen">
+    <div style="font-family:'JetBrains Mono'; font-size:0.7rem; color:var(--text-muted); letter-spacing:0.4em; margin-bottom:3rem;">AURACORE ELITE v5.5</div>
+    <button class="btn-play" id="btnLaunch">Initiate Showcase</button>
+</div>
+
+<div class="ambient-light" id="ambient"></div>
+<div id="world"></div>
+<div class="progress-bar-wrap"><div id="progress"></div></div>
+
+<div class="overlay-ui">
+    <div class="header">
+        <div class="brand-logo"><div class="pulse-dot"></div> AURACORE</div>
+        <div class="sys-status">SYS.SYNC :: OPTIMAL</div>
+    </div>
+
+    <div class="card-stage">
+        <!-- SCENE 1 -->
+        <div class="master-card" id="card1">
+            <div class="card-content">
+                <div class="tagline">Phase 01 // Reasoning</div>
+                <div class="card-title">94% Neural <br><span class="gradient-text">Logic Synthesis</span></div>
+                <div class="card-desc">Standard LLMs output the first acceptable guess. AuraCore Elite implements a recursive, multi-agent adversarial loop.</div>
+                <div class="card-desc" style="color:var(--text-main); font-weight:600;">The Skeptic Agent audits the Optimist. Lazy logic is rejected entirely.</div>
+            </div>
+            <div class="card-visual">
+                <div class="orbital-ring"></div>
+                <div class="orbital-ring"></div>
+                <div class="core-sphere"></div>
+            </div>
+        </div>
+
+        <!-- SCENE 2 -->
+        <div class="master-card" id="card2">
+            <div class="card-content">
+                <div class="tagline" style="color:var(--accent);">Phase 02 // Defense</div>
+                <div class="card-title">Localized <br><span class="gradient-text" style="background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text;">Red-Team Auditing</span></div>
+                <div class="card-desc">You do not send proprietary code to the cloud. AuraCore transforms into a localized penetration tester.</div>
+                <div class="card-desc" style="color:var(--text-main); font-weight:600;">It hunts vulnerabilities, simulates exploit vectors, and hardens code natively.</div>
+            </div>
+            <div class="card-visual">
+                <div class="shield-grid"><div class="scanner-line"></div></div>
+                <div style="position:absolute; font-family:'JetBrains Mono'; color:var(--accent); font-size:0.8rem; background:rgba(0,0,0,0.8); padding:0.5rem; border:1px solid var(--accent);">VULNERABILITY_SCAN_ACTIVE</div>
+            </div>
+        </div>
+
+        <!-- SCENE 3 -->
+        <div class="master-card" id="card3">
+            <div class="card-content">
+                <div class="tagline" style="color:var(--secondary);">Phase 03 // Orchestration</div>
+                <div class="card-title">Triple-Engine <br><span class="gradient-text" style="background: linear-gradient(90deg, #fff, var(--secondary)); -webkit-background-clip: text;">Model Fusion</span></div>
+                <div class="card-desc">No single model excels at everything. AuraCore dynamically segments tasks to the optimal intelligence.</div>
+                <div style="font-family:'JetBrains Mono'; font-size:0.85rem; line-height:2; color:var(--text-muted);">
+                    <span style="color:var(--primary)">■ Llama 3</span> ...... Strategic Logic<br>
+                    <span style="color:var(--secondary)">■ Mistral</span> ...... Data Synthesis<br>
+                    <span style="color:var(--accent)">■ CodeLlama</span> .... Deep Architecture
+                </div>
+            </div>
+            <div class="card-visual">
+                <div class="pillar-container">
+                    <div class="pillar" style="--c: var(--primary); --h: 120px;"></div>
+                    <div class="pillar" style="--c: var(--secondary); --h: 180px; animation-delay:0.3s;"></div>
+                    <div class="pillar" style="--c: var(--accent); --h: 150px; animation-delay:0.6s;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENE 4 -->
+        <div class="master-card" id="card4" style="flex-direction: column; align-items: center; justify-content: center; text-align: center; border:none; background:transparent; box-shadow:none; backdrop-filter:none;">
+            <div style="font-size: 5rem; font-weight: 900; line-height: 1; letter-spacing: -0.05em;">THE FUTURE <br>IS <span class="gradient-text">LOCAL.</span></div>
+            <div style="font-size: 1.2rem; color: var(--text-muted); margin-top: 2rem; letter-spacing: 0.2em; text-transform: uppercase;">AuraCore Elite // V5.5</div>
+        </div>
+    </div>
+</div>
+
+<div class="caption-container">
+    <div id="subtitle"></div>
+</div>
+
+<script>
+    /* --- 3D PARTICLE ENGINE --- */
+    const world = document.getElementById('world');
+    for(let i=0; i<150; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const s = Math.random() * 3 + 1;
+        p.style.width = `${s}px`; p.style.height = `${s}px`;
+        const x = (Math.random() - 0.5) * 3000;
+        const y = (Math.random() - 0.5) * 2000;
+        const z = (Math.random() - 0.5) * 3000;
+        p.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
+        world.appendChild(p);
+    }
+
+    /* --- ROBUST AUDIO ENGINE --- */
+    let currentUtterance = null;
+    
+    // Pre-load voices
+    let availableVoices = [];
+    window.speechSynthesis.onvoiceschanged = () => {
+        availableVoices = window.speechSynthesis.getVoices();
+    };
+
+    function getBestVoice() {
+        if(availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+        
+        // AGGRESSIVE TARGETING: Guarantee a Female Voice
+        const femaleVoice = 
+               availableVoices.find(v => v.name.includes('Jenny')) ||
+               availableVoices.find(v => v.name.includes('Aria')) ||
+               availableVoices.find(v => v.name.includes('Jane')) ||
+               availableVoices.find(v => v.name.includes('Michelle')) ||
+               availableVoices.find(v => v.name.includes('Sonia')) ||
+               availableVoices.find(v => v.name.includes('Hazel')) ||
+               availableVoices.find(v => v.name.includes('Susan')) ||
+               availableVoices.find(v => v.name.includes('Zira')) || 
+               availableVoices.find(v => v.name.includes('Female')) ||
+               availableVoices.find(v => v.name.includes('female'));
+
+        // If no explicit female is found, explicitly avoid known male defaults (David, Mark)
+        return femaleVoice || availableVoices.find(v => !v.name.includes('David') && !v.name.includes('Mark') && !v.name.includes('Male')) || availableVoices[0];
+    }
+
+    /* PROMISE-BASED SPEECH TO PREVENT STUTTERING/CUTOFFS */
+    function speakText(text) {
+        return new Promise((resolve) => {
+            if (!window.speechSynthesis) { resolve(); return; }
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = getBestVoice();
+            utterance.pitch = 1.0;
+            utterance.rate = 0.95; // Crisp, professional pace
+            
+            utterance.onend = () => { resolve(); };
+            utterance.onerror = (e) => { console.error(e); resolve(); };
+            
+            // Keep utterance alive in memory to prevent garbage collection bugs in Chrome
+            currentUtterance = utterance; 
+            window.speechSynthesis.speak(utterance);
+        });
+    }
+
+    /* --- CINEMATIC DIRECTOR --- */
+    const subEl = document.getElementById('subtitle');
+    const progress = document.getElementById('progress');
+    const ambient = document.getElementById('ambient');
+
+    async function showSubtitle(text) {
+        subEl.classList.remove('visible');
+        await new Promise(r => setTimeout(r, 300));
+        subEl.textContent = text;
+        subEl.classList.add('visible');
+    }
+
+    async function hideSubtitle() {
+        subEl.classList.remove('visible');
+        await new Promise(r => setTimeout(r, 300));
+    }
+
+    async function playScene(cardId, zMove, ambientColor, lines) {
+        // Clear old card
+        const current = document.querySelector('.master-card.active');
+        if (current) {
+            current.style.transform = 'translateZ(-800px) rotateY(20deg)';
+            current.style.opacity = '0';
+            setTimeout(() => current.classList.remove('active'), 800);
+        }
+
+        // Move Camera & Lights
+        world.style.transform = `translateZ(${zMove}px) rotateY(${zMove/20}deg)`;
+        ambient.style.background = `radial-gradient(circle, ${ambientColor} 0%, transparent 60%)`;
+
+        // Bring in new card
+        const next = document.getElementById(cardId);
+        next.classList.add('active');
+        await new Promise(r => setTimeout(r, 1000)); // Wait for card enter animation
+
+        // Play Dialogue Lines sequentially
+        for (let i = 0; i < lines.length; i++) {
+            showSubtitle(lines[i].sub);
+            // CRITICAL FIX: Execution completely pauses until the voice is 100% finished speaking
+            await speakText(lines[i].speak); 
+            await new Promise(r => setTimeout(r, 600)); // Natural human pause between sentences
+        }
+        
+        await hideSubtitle();
+        await new Promise(r => setTimeout(r, 500)); // Buffer before next scene
+    }
+
+    async function startShowcase() {
+        // Initialize
+        availableVoices = window.speechSynthesis.getVoices();
+        document.getElementById('startScreen').classList.add('hidden');
+        await new Promise(r => setTimeout(r, 1000));
+
+        // SCENE 1
+        progress.style.width = '25%';
+        await playScene('card1', 300, 'rgba(34, 211, 238, 0.08)', [
+            { sub: "Most AI models give you a first draft.", speak: "Most A.I. models give you a first draft." },
+            { sub: "At AuraCore Elite... we demand a third.", speak: "At Aura Core Elite, we demand a third." },
+            { sub: "This is the Neural Debate.", speak: "This is the Neural Debate." },
+            { sub: "A recursive loop where the skeptic agent actively audits and rejects lazy logic.", speak: "A recursive loop where the skeptic agent actively audits and rejects lazy logic." }
+        ]);
+
+        // SCENE 2
+        progress.style.width = '50%';
+        await playScene('card2', -400, 'rgba(244, 63, 94, 0.08)', [
+            { sub: "Security is not a feature. It is the mission.", speak: "Security is not a feature. It is the mission." },
+            { sub: "Switch to Red Team Mode.", speak: "Switch to Red Team Mode." },
+            { sub: "Localized, high-intensity security auditing that never touches the cloud.", speak: "Localized, high-intensity security auditing that never touches the cloud." }
+        ]);
+
+        // SCENE 3
+        progress.style.width = '75%';
+        await playScene('card3', 500, 'rgba(139, 92, 246, 0.08)', [
+            { sub: "Three elite models. One localized brain.", speak: "Three elite models. One localized brain." },
+            { sub: "Llama 3, Mistral, and Code Llama orchestrated to out-think the giants.", speak: "Llama Three, Mistral, and Code Llama, orchestrated to out-think the giants." }
+        ]);
+
+        // SCENE 4 (FINALE)
+        progress.style.width = '100%';
+        await playScene('card4', 800, 'rgba(255, 255, 255, 0.05)', [
+            { sub: "AuraCore Elite v5.5.", speak: "Aura Core Elite. Version five point five." },
+            { sub: "Take back your ownership. Take back your intelligence.", speak: "Take back your ownership. Take back your intelligence." }
+        ]);
+        
+        await new Promise(r => setTimeout(r, 3000));
+        location.reload();
+    }
+
+    document.getElementById('btnLaunch').addEventListener('click', () => {
+        // Must interact to unlock speech synthesis
+        const t = new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(t);
+        startShowcase();
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Environment
+.env
+.env.local
+
+# Node
+node_modules/
+.next/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.zip
+
+# ==========================================
+# 🔒 SENSITIVE — NEVER PUSH TO GITHUB
+# ==========================================
+
+# License system (contains signing secret)
+backend/app/license_guard.py
+license_generator.html
+
+# Entire backend (your business logic)
+backend/
+
+# Shipping/build scripts
+create_shipping_zip.py
+
+# License files
+*.aura
+
+# Marketing assets (personal)
+linkedin_assets/
+auracore_demo_reel.html
+customer_setup_guide.html
+auracore_character.png
+
+# Database
+aura_memory.db
+
+# Bat files (local only)
+Aura_Control.bat
+PURGE_SENSITIVE_INTEL.bat
+
+# Founder's Secrets
+AuraCore_Elite_Founder_Omnibus.html
+AuraCore_Elite_Master_Blueprint.md
+AuraCore_Elite_The_Omnibus_Blueprint.md
+AuraCore_Elite_Business_Execution_Plan.md

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuraCore Elite - Personal Demo Guide</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@500&display=swap');
+    :root {
+        --bg: #050510;
+        --card: rgba(255, 255, 255, 0.03);
+        --accent: #22d3ee;
+        --accent-glow: rgba(34, 211, 238, 0.3);
+        --text: #e2e8f0;
+        --text-dim: #94a3b8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 40px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .header { border-left: 4px solid var(--accent); padding-left: 20px; margin-bottom: 40px; }
+    h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--accent); }
+    .subtitle { font-size: 1.1rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+    
+    .section { background: var(--card); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 30px; margin-bottom: 30px; }
+    h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+    
+    .step { display: flex; gap: 20px; margin-bottom: 25px; }
+    .step-num { min-width: 32px; height: 32px; background: var(--accent); color: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; margin-top: 4px; }
+    .step-content h3 { font-size: 1.1rem; margin-bottom: 8px; color: #fff; }
+    .step-content p { color: var(--text-dim); font-size: 0.95rem; }
+    
+    code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; color: var(--accent); font-size: 0.85rem; }
+    .cmd-box { background: #000; padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #50fa7b; }
+    
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-top: 10px; }
+    .badge-prepare { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+    .badge-live { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+    
+    .script-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .script-table th { text-align: left; padding: 12px; font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .script-table td { padding: 15px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+    .speak { font-weight: 600; color: #fff; }
+    .type { font-style: italic; color: var(--accent); font-size: 0.9rem; }
+
+    @media print {
+        body { background: #fff; color: #000; padding: 20px; }
+        .section { border: 1px solid #ddd; background: #fff; page-break-inside: avoid; }
+        h1, h2, .step-num { color: #000; }
+        .cmd-box { border: 1px solid #000; color: #000; }
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <p class="subtitle">Mission Protocol: 4:00 PM Meeting</p>
+            <h1>Founder's Demo Checklist</h1>
+        </div>
+
+        <!-- SECTION 1: SETUP -->
+        <div class="section">
+            <h2><span class="step-num">1</span> Preparation (3:30 PM - 3:50 PM)</h2>
+            <div class="step-content">
+                <div class="step">
+                    <div class="step-content">
+                        <h3>1. Load the Models (Critical for speed)</h3>
+                        <p>Open 2 separate Terminal/Command Prompt windows and run these commands to "pre-warm" the AI:</p>
+                        <div class="cmd-box">ollama run llama3 ""</div>
+                        <div class="cmd-box">ollama run mistral ""</div>
+                        <p style="margin-top:8px"><i>This keeps them in VRAM so they respond instantly during the demo.</i></p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h3>2. Open the Browser Tabs</h3>
+                        <p>Have exactly 3 tabs open in Chrome/Edge:</p>
+                        <p>• Tab 1: <code>auracore_demo_reel.html</code> (The visual animation)</p>
+                        <p>• Tab 2: Your Local Frontend (The real app)</p>
+                        <p>• Tab 3: The Google Meet Link</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: THE FLOW -->
+        <div class="section">
+            <h2><span class="step-num">2</span> The Meeting Flow</h2>
+            <table class="script-table">
+                <thead>
+                    <tr>
+                        <th>Phase</th>
+                        <th>What to Say (Slowly)</th>
+                        <th>What to Type (Chat)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Intro</strong></td>
+                        <td class="speak">"Hi Vivek. Hi team. Today, I'll show you why we are moving to 'Owned Intelligence' instead of 'Rented Intelligence'."</td>
+                        <td class="type">"Hello everyone. Excited to show you the AuraCore Elite architecture today."</td>
+                    </tr>
+                    <tr>
+                        <td><strong>The Reel</strong></td>
+                        <td class="speak">"I'll share my screen. This is the logic of our Neural Debate loop."</td>
+                        <td class="type">"Sharing screen. This animation explains our 5-agent adversarial reasoning process."</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Live Demo</strong></td>
+                        <td class="speak">"Let's see it live. I'm asking it to audit a logic vulnerability now."</td>
+                        <td class="type">"Prompting: 'Audit the logic of a local RAG pipeline for industrial security.' "</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 3: THE "SECRET SAUCE" FOR THE CTO -->
+        <div class="section">
+            <h2><span class="step-num">3</span> Technical Answers for the CTO</h2>
+            <p style="margin-bottom:15px; color:var(--text-dim)">If the CTO asks how it works, use these phrases:</p>
+            <div style="display:flex; flex-direction:column; gap:10px">
+                <p>• <strong>Orchestration:</strong> "Custom Python backend using FastAPI and asynchronous model switching."</p>
+                <p>• <strong>Debate Logic:</strong> "Bilateral adversarial reasoning between a Skeptic and a Security Architect."</p>
+                <p>• <strong>Privacy:</strong> "100% data sovereignty. No telemetry, no external API calls. Pure Edge Intelligence."</p>
+            </div>
+        </div>
+
+        <!-- SECTION 4: TROUBLESHOOTING -->
+        <div class="section" style="border-color: rgba(245, 158, 11, 0.3)">
+            <h2 style="color:#f59e0b">🚨 Emergency "Wait" Lines</h2>
+            <p>If the AI is slow or gives a weird answer, say these exactly:</p>
+            <ul style="margin-left:20px; margin-top:10px; font-style:italic">
+                <li>"The local loop is crunching a deep-thinking iteration. Quality takes a few seconds."</li>
+                <li>"This is exactly why we use the 3-iteration loop. The 'Skeptic' agent is currently auditing that response for inconsistencies."</li>
+                <li>"Let me type the technical details in the chat while the agents finish the synthesis."</li>
+            </ul>
+        </div>
+
+        <!-- SECTION 5: EXPERT SECRETS (FOR THE CTO) -->
+        <div class="section" style="border-color: var(--accent)">
+            <h2 style="color:var(--accent)">🧠 Expert "Founder" Secrets</h2>
+            <p style="margin-bottom:10px">Use these to impress the CTO:</p>
+            <div style="display:flex; flex-direction:column; gap:15px">
+                <div>
+                    <strong style="color:#fff">1. Privacy vs. Utility:</strong>
+                    <p style="font-size:0.9rem">"We run 70B parameter models at 4-bit quantization (GGUF) locally. You get GPT-4 level reasoning with zero cloud leakage."</p>
+                </div>
+                <div>
+                    <strong style="color:#fff">2. The Hallucination Killer:</strong>
+                    <p style="font-size:0.9rem">"The Neural Debate loop is our automated peer-review. The 'Skeptic' catches hallucinations before they reach the UI."</p>
+                </div>
+                <div>
+                    <strong style="color:#fff">3. Edge Intelligence:</strong>
+                    <p style="font-size:0.9rem">"We are optimized for 'The Edge.' For industrial robotics, you can't have a 50ms cloud delay. AuraCore runs on the factory floor."</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 6: THE CLOSE -->
+        <div class="section" style="background: rgba(34, 197, 94, 0.05); border-color: rgba(34, 197, 94, 0.2)">
+            <h2 style="color:#22c55e">🎯 How to Close (at 15 mins)</h2>
+            <p class="speak">"I want to respect your time. I'll send over the Technical Briefing PDF right after this. Vivek, perhaps we can schedule a deeper dive next week to discuss how this fits into your Industrial AI stack?"</p>
+        </div>
+
+        <!-- SECTION 7: THE SALES OFFER (HOW TO SELL) -->
+        <div class="section" style="border-left: 4px solid #f43f5e; background: rgba(244, 63, 94, 0.03)">
+            <h2 style="color:#f43f5e">💰 The Sales Offer</h2>
+            <p>If they ask about price, do not give a low number. Offer the **Enterprise Pilot** first:</p>
+            <div style="display:flex; flex-direction:column; gap:15px">
+                <div>
+                    <strong style="color:#fff">The Pilot Offer:</strong>
+                    <p style="font-size:0.9rem">"We are currently selecting 3 'Big Fish' partners for our 30-day Enterprise Pilot. We handle the full local setup and custom agent training for a flat fee."</p>
+                </div>
+                <div>
+                    <strong style="color:#fff">The License:</strong>
+                    <p style="font-size:0.9rem">"After the pilot, we offer a **Perpetual Lifetime License**. No monthly 'rental' fees. You own the intelligence forever."</p>
+                </div>
+                <div>
+                    <strong style="color:#fff">Why this works:</strong>
+                    <p style="font-size:0.9rem">It moves them from "Testing" to "Partnering." It makes AuraCore feel exclusive.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 8: THE SILENCE BREAKERS -->
+        <div class="section" style="border-left: 4px solid #8b5cf6; background: rgba(139, 92, 246, 0.03)">
+            <h2 style="color:#8b5cf6">🤫 The Silence Breakers</h2>
+            <p>If it gets quiet and you feel nervous, use these "Fillers" to keep the energy high:</p>
+            <div style="display:flex; flex-direction:column; gap:15px">
+                <div>
+                    <strong style="color:#fff">Filler 1: Explain the "Thinking" (While AI runs)</strong>
+                    <p style="font-size:0.9rem; font-style:italic">"The reason you see a delay here is that we aren't just doing a simple completion. The orchestrator is running a multi-step adversarial audit. It’s better to wait 5 seconds for a correct answer than to get a wrong one instantly."</p>
+                </div>
+                <div>
+                    <strong style="color:#fff">Filler 2: The "Vision" Speech (If they are quiet after demo)</strong>
+                    <p style="font-size:0.9rem; font-style:italic">"The goal of AuraCore isn't just to be another chatbot. We are building the infrastructure for autonomous industrial agents. Imagine this loop running 24/7 on your factory servers, monitoring logic and security without ever needing the cloud."</p>
+                </div>
+                <div>
+                    <strong style="color:#fff">Filler 3: Turn it back to them (The Power Move)</strong>
+                    <p style="font-size:0.9rem; font-style:italic">"I'm curious, Vivek—how are you currently handling the data privacy concerns when your team uses cloud-based models for proprietary robotics code?"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 9: THE VERSION TEST MATRIX -->
+        <div class="section" style="border: 1px solid var(--accent); background: rgba(34, 211, 238, 0.05)">
+            <h2 style="color:var(--accent)">🧪 The Version Test Matrix</h2>
+            <p>During the demo, switch versions at the top and enter these exact prompts to show off the specialization:</p>
+            
+            <table class="script-table">
+                <thead>
+                    <tr>
+                        <th>Version</th>
+                        <th>Enter This Prompt</th>
+                        <th>What it Shows</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>v5.5-Flux</strong></td>
+                        <td class="type">"Explain the core benefits of 'Owned Intelligence' for enterprise security."</td>
+                        <td style="font-size: 0.8rem">High-speed, general intelligence and clean reasoning.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>v5.5-Analyst</strong></td>
+                        <td class="type">"Analyze the competitive landscape of the Robotics market in India for 2026."</td>
+                        <td style="font-size: 0.8rem">Deep research, market trends, and data-driven output.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>v5.5-Coder</strong></td>
+                        <td class="type">"Write a Python script for a local encrypted storage bridge using SQLite WAL mode."</td>
+                        <td style="font-size: 0.8rem">Technical precision and perfect code syntax.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>v5.5-RedTeam</strong></td>
+                        <td class="type">"Stress-test the logic of a multi-agent debate loop. Identify 3 logic vulnerabilities."</td>
+                        <td style="font-size: 0.8rem">Security auditing and the <strong>Neural Debate</strong> loop at its maximum.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p style="text-align:center; font-size:0.7rem; color:var(--text-dim); margin-top:20px">
+            AURACORE ELITE MISSION PROTOCOL // SECURE // FOUNDER ONLY
+        </p>
+    </div>
+</body>
+</html>
