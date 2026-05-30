@@ -535,7 +535,7 @@ export default function Home() {
                 <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-2 mb-2">Telemetry</h3>
                 <div className="grid grid-cols-3 gap-2 px-2 h-10 items-end">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="flex flex-col gap-1 items-center h-full justify-end">
+                        <div key={`telemetry-bar-${i}`} className="flex flex-col gap-1 items-center h-full justify-end">
                             <div className="w-1.5 bg-cyan-500/40 rounded-t-sm telemetry-bar" style={{ animationDelay: `${i * 0.1}s` }}></div>
                         </div>
                     ))}
@@ -731,7 +731,7 @@ export default function Home() {
                                             {/* Iteration Progress Dots */}
                                             <div className="flex items-center gap-2">
                                                 {Array.from({ length: thinkLoop.max_iterations }).map((_, i) => (
-                                                    <div key={i} className="flex items-center gap-2">
+                                                    <div key={`think-dot-${i}`} className="flex items-center gap-2">
                                                         <div className={`w-3 h-3 rounded-full transition-all duration-500 ${
                                                             i < thinkLoop.iteration 
                                                                 ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]' 
